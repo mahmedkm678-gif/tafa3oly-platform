@@ -3,7 +3,7 @@
    ========================================== */
 
 // ==================== CONSTANTS ====================
-const API_BASE = 'http://127.0.0.1:8000/api';
+const API_BASE = 'https://mahmoudkaram326.pythonanywhere.com/api';
 const LEVELS_DATA = [
   {code:'quran',label:'القرآن الكريم',icon:'fa-mosque'},
   {code:'university',label:'الجامعة',icon:'fa-university'},
