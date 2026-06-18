@@ -3,7 +3,10 @@ from django.urls import path, include, re_path
 from django.views.static import serve
 from django.conf import settings
 
+from core.views import welcome_view
+
 urlpatterns = [
+    path("", welcome_view, name="welcome"),
     path("admin/", admin.site.urls),
     path("api/", include("users.urls")),
     path("api/files/", include("files.urls")),
