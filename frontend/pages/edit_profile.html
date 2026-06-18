@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تعديل الملف الشخصي - تفاعلي</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/design-system.css">
+</head>
+<body>
+  <div class="glow-ambient glow-purple"></div>
+  <div class="glow-ambient glow-blue"></div>
+  <div id="navbar"></div>
+  <div class="container" style="padding-top: 32px; max-width: 640px;">
+    <h2 style="margin-bottom:4px;">تعديل الملف الشخصي</h2>
+    <p style="color:var(--text-muted);margin-bottom:24px;font-size:0.9rem;">حدّث بياناتك الشخصية والمهنية</p>
+
+    <div class="glass-card" style="padding:24px;">
+      <form id="profileForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>الاسم الأول</label>
+            <input type="text" id="first_name" required>
+          </div>
+          <div class="form-group">
+            <label>الاسم الأخير</label>
+            <input type="text" id="last_name" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>البريد الإلكتروني</label>
+          <input type="email" id="email" required>
+        </div>
+        <div class="form-group">
+          <label>التخصص</label>
+          <input type="text" id="specialization" placeholder="مثال: تحفيظ قرآن, رياضيات">
+        </div>
+        <div class="form-group" id="paypalGroup">
+          <label>بريد PayPal</label>
+          <input type="email" id="paypal_email" placeholder="tutor@paypal.com">
+        </div>
+
+        <div id="tutorOnly">
+          <div class="form-group">
+            <label>سنوات الخبرة</label>
+            <input type="number" id="years_experience" min="0">
+          </div>
+          <div class="form-group">
+            <label>المؤهل العلمي</label>
+            <input type="text" id="education" placeholder="بكالوريوس...">
+          </div>
+          <div class="form-group">
+            <label>الإجازات والشهادات</label>
+            <textarea id="certificates" placeholder="إجازة برواية حفص..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>نبذة عني</label>
+            <textarea id="bio" placeholder="نبذة مختصرة عن خبراتك..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>المستوى الدراسي (مختص به)</label>
+            <select id="teaching_level"></select>
+          </div>
+          <div class="form-group" id="langEditGroup" style="display:none;">
+            <label>اللغات التي تدرسها</label>
+            <div id="langEditCheckboxes" class="checkbox-group" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+          </div>
+        </div>
+
+        <div id="studentOnly" style="display:none;">
+          <div class="form-group">
+            <label>المستويات الدراسية</label>
+            <div id="studentLevelCheckboxes" class="checkbox-group" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+          </div>
+        </div>
+
+        <p id="profileError" style="color:#EF4444;font-size:0.85rem;display:none;"></p>
+        <button type="submit" class="btn btn-primary" id="profileBtn" style="width:100%;">حفظ التغييرات</button>
+      </form>
+    </div>
+  </div>
+  <div id="footer"></div>
+
+  <style>
+    .checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; }
+    .checkbox-group label { display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(255,255,255,0.03); border: var(--border-glass); border-radius: var(--radius-sm); cursor: pointer; font-size: 0.85rem; color: var(--text-gray); }
+    .checkbox-group label:has(input:checked) { border-color: var(--accent-purple); background: rgba(139,92,246,0.1); }
+    .checkbox-group input { display: none; }
+  </style>
+  <script src="../js/shared.js"></script>
+  <script>
+    redirectIfGuest();
+    const role = getRole();
+
+    if (role === 'student') {
+      document.getElementById('tutorOnly').style.display = 'none';
+      document.getElementById('studentOnly').style.display = 'block';
+      document.getElementById('paypalGroup').style.display = 'none';
+      const cont = document.getElementById('studentLevelCheckboxes');
+      LEVELS_DATA.forEach(l => { cont.innerHTML += `<label><input type="checkbox" name="student_levels" value="${l.code}"><span>${l.label}</span></label>`; });
+    } else {
+      const sl = document.getElementById('teaching_level');
+      LEVELS_DATA.forEach(l => { sl.innerHTML += `<option value="${l.code}">${l.label}</option>`; });
+      const lc = document.getElementById('langEditCheckboxes');
+      LANG_DATA.forEach(l => { lc.innerHTML += `<label><input type="checkbox" name="langs" value="${l.code}"><span>${l.label}</span></label>`; });
+      sl.addEventListener('change', function() {
+        document.getElementById('langEditGroup').style.display = this.value === 'languages' ? 'block' : 'none';
+      });
+    }
+
+    // Load user data
+    (async () => {
+      try {
+        const u = await api('GET', '/users/profile/');
+        document.getElementById('first_name').value = u.first_name || '';
+        document.getElementById('last_name').value = u.last_name || '';
+        document.getElementById('email').value = u.email || '';
+        document.getElementById('specialization').value = u.specialization || '';
+        document.getElementById('paypal_email').value = u.paypal_email || '';
+        if (role === 'tutor') {
+          document.getElementById('years_experience').value = u.years_experience || '';
+          document.getElementById('education').value = u.education || '';
+          document.getElementById('certificates').value = u.certificates || '';
+          document.getElementById('bio').value = u.bio || '';
+          if (u.teaching_level) document.getElementById('teaching_level').value = u.teaching_level;
+          document.getElementById('langEditGroup').style.display = u.teaching_level === 'languages' ? 'block' : 'none';
+          if (u.languages && Array.isArray(u.languages)) {
+            document.querySelectorAll('#langEditCheckboxes input').forEach(cb => { if (u.languages.includes(cb.value)) cb.checked = true; });
+          }
+        } else {
+          if (u.student_levels && Array.isArray(u.student_levels)) {
+            document.querySelectorAll('#studentLevelCheckboxes input').forEach(cb => { if (u.student_levels.includes(cb.value)) cb.checked = true; });
+          }
+        }
+      } catch (e) { alert('خطأ في تحميل البيانات'); }
+    })();
+
+    document.getElementById('profileForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('profileBtn');
+      btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+      const err = document.getElementById('profileError');
+      err.style.display = 'none';
+
+      const body = {
+        first_name: document.getElementById('first_name').value,
+        last_name: document.getElementById('last_name').value,
+        email: document.getElementById('email').value,
+        specialization: document.getElementById('specialization').value,
+      };
+
+      if (role === 'tutor') {
+        body.paypal_email = document.getElementById('paypal_email').value;
+        body.years_experience = document.getElementById('years_experience').value || null;
+        body.education = document.getElementById('education').value;
+        body.certificates = document.getElementById('certificates').value;
+        body.bio = document.getElementById('bio').value;
+        body.teaching_level = document.getElementById('teaching_level').value;
+        body.languages = [...document.querySelectorAll('#langEditCheckboxes input:checked')].map(c => c.value);
+      } else {
+        body.student_levels = [...document.querySelectorAll('#studentLevelCheckboxes input:checked')].map(c => c.value);
+      }
+
+      try {
+        const data = await api('PUT', '/users/profile/', body);
+        setUserData(data);
+        alert('تم حفظ التغييرات');
+      } catch (e) { err.textContent = e.data?.error || e.message; err.style.display = 'block'; }
+      finally { btn.disabled = false; btn.textContent = 'حفظ التغييرات'; }
+    });
+  </script>
+</body>
+</html>

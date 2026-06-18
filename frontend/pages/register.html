@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إنشاء حساب - تفاعلي</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/design-system.css">
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+    .register-card { width: 100%; max-width: 600px; }
+    .register-card .logo { justify-content: center; margin-bottom: 24px; }
+    .register-card h1 { text-align: center; font-size: 1.6rem; margin-bottom: 6px; }
+    .register-card .sub { text-align: center; color: var(--text-gray-muted); margin-bottom: 28px; font-size: 0.9rem; }
+    .tutor-section { border-top: 1px solid rgba(255,255,255,0.06); padding-top: 18px; margin-top: 18px; }
+    .tutor-section h3 { color: var(--primary-blue); font-size: 1rem; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <div class="glow-ambient glow-purple"></div>
+  <div class="glow-ambient glow-blue"></div>
+  <div class="glass-card register-card" style="padding:28px;">
+    <a href="../index.html" class="logo"><span class="logo-cap"><i class="fas fa-graduation-cap"></i></span> تفاعلي</a>
+    <h1>إنشاء حساب جديد</h1>
+    <p class="sub">سجل كمدرس أو طالب في المنصة</p>
+
+    <form id="registerForm">
+      <div class="form-row">
+        <div class="form-group">
+          <label>الاسم الأول</label>
+          <input type="text" id="first_name" required placeholder="أحمد">
+        </div>
+        <div class="form-group">
+          <label>الاسم الأخير</label>
+          <input type="text" id="last_name" required placeholder="محمد">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>اسم المستخدم</label>
+          <input type="text" id="username" required placeholder="ahmed123">
+        </div>
+        <div class="form-group">
+          <label>نوع الحساب</label>
+          <select id="role">
+            <option value="student">طالب</option>
+            <option value="tutor">مدرس</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>البريد الإلكتروني</label>
+        <input type="email" id="email" required placeholder="ahmed@example.com">
+      </div>
+      <div class="form-group">
+        <label>كلمة المرور</label>
+        <input type="password" id="password" required minlength="8" placeholder="أقل 8 أحرف">
+      </div>
+
+      <div class="form-group">
+        <label>المستوى الدراسي</label>
+        <div id="levelSelect" class="checkbox-group"></div>
+        <div style="color:var(--text-muted);font-size:0.75rem;margin-top:4px;" id="levelHint">اختر مستوى واحد للتخصص كمدرس / مستوى أو أكثر كطالب</div>
+      </div>
+
+      <div class="form-group">
+        <label>التخصص</label>
+        <input type="text" id="specialization" placeholder="مثال: تحفيظ قرآن, رياضيات, لغة إنجليزية">
+      </div>
+
+      <div id="paypalGroup" class="form-group" style="display:none;">
+        <label>بريد PayPal (للاستلام)</label>
+        <input type="email" id="paypal_email" placeholder="tutor@paypal.com">
+      </div>
+
+      <div id="langGroup" class="form-group" style="display:none;">
+        <label>اللغات التي تدرسها</label>
+        <div id="langCheckboxes" class="checkbox-group"></div>
+      </div>
+
+      <div id="tutorFields" class="tutor-section" style="display:none;">
+        <h3>بيانات المدرس</h3>
+        <div class="form-group">
+          <label>سنوات الخبرة</label>
+          <input type="number" id="years_experience" min="0" placeholder="مثال: 5">
+        </div>
+        <div class="form-group">
+          <label>المؤهل العلمي</label>
+          <input type="text" id="education" placeholder="مثال: بكالوريوس لغة عربية - جامعة الأزهر">
+        </div>
+        <div class="form-group">
+          <label>الإجازات والشهادات</label>
+          <textarea id="certificates" placeholder="مثال: إجازة برواية حفص عن عاصم، دورة في أحكام التلاوة..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>نبذة عني</label>
+          <textarea id="bio" placeholder="اكتب نبذة مختصرة عن خبراتك وأسلوبك في التدريس..."></textarea>
+        </div>
+      </div>
+
+      <p id="errorMsg" style="color:#EF4444;font-size:0.85rem;text-align:center;display:none;"></p>
+      <button type="submit" class="btn btn-primary" id="submitBtn" style="width:100%;">تسجيل</button>
+    </form>
+
+    <div style="text-align:center;margin-top:18px;font-size:0.9rem;color:var(--text-muted);">
+      لديك حساب؟ <a href="login.html" style="color:var(--accent-purple);font-weight:600;">تسجيل دخول</a>
+    </div>
+  </div>
+
+  <script src="../js/shared.js"></script>
+  <script>
+    redirectIfAuth();
+
+    const levelContainer = document.getElementById('levelSelect');
+    LEVELS_DATA.forEach(l => {
+      levelContainer.innerHTML += `<label><input type="checkbox" name="levels" value="${l.code}"><i class="fas ${l.icon}"></i> <span>${l.label}</span></label>`;
+    });
+
+    const langContainer = document.getElementById('langCheckboxes');
+    LANG_DATA.forEach(l => {
+      langContainer.innerHTML += `<label><input type="checkbox" name="langs" value="${l.code}"><span>${l.label}</span></label>`;
+    });
+
+    document.getElementById('role').addEventListener('change', function() {
+      const isTutor = this.value === 'tutor';
+      document.getElementById('paypalGroup').style.display = isTutor ? 'block' : 'none';
+      document.getElementById('tutorFields').style.display = isTutor ? 'block' : 'none';
+
+      const checkboxes = levelContainer.querySelectorAll('input[type="checkbox"]');
+      const hint = document.getElementById('levelHint');
+      if (isTutor) {
+        checkboxes.forEach(cb => { cb.checked = false; });
+        hint.textContent = 'اختر مستوى واحد فقط للتخصص كمدرس';
+      } else {
+        hint.textContent = 'اختر مستوى أو أكثر كطالب';
+      }
+      document.getElementById('langGroup').style.display = isTutor ? 'block' : 'none';
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const err = document.getElementById('errorMsg');
+      btn.disabled = true; btn.textContent = 'جاري التسجيل...'; err.style.display = 'none';
+
+      const checkedLevels = [...levelContainer.querySelectorAll('input:checked')].map(c => c.value);
+      if (checkedLevels.length === 0) { err.textContent = 'اختر مستوى تعليمي واحد على الأقل'; err.style.display = 'block'; btn.disabled = false; btn.textContent = 'تسجيل'; return; }
+
+      const role = document.getElementById('role').value;
+      if (role === 'tutor' && checkedLevels.length > 1) { err.textContent = 'المدرس يختار مستوى واحد فقط'; err.style.display = 'block'; btn.disabled = false; btn.textContent = 'تسجيل'; return; }
+
+      const checkedLangs = [...langContainer.querySelectorAll('input:checked')].map(c => c.value);
+
+      const body = {
+        username: document.getElementById('username').value,
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+        first_name: document.getElementById('first_name').value,
+        last_name: document.getElementById('last_name').value,
+        role: role,
+        specialization: document.getElementById('specialization').value,
+      };
+      if (role === 'tutor') {
+        body.teaching_level = checkedLevels[0];
+        body.languages = checkedLangs;
+        body.paypal_email = document.getElementById('paypal_email').value;
+        body.years_experience = document.getElementById('years_experience').value || null;
+        body.education = document.getElementById('education').value;
+        body.certificates = document.getElementById('certificates').value;
+        body.bio = document.getElementById('bio').value;
+      } else {
+        body.student_levels = checkedLevels;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/register/`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(Object.values(data).flat().join(', '));
+        localStorage.setItem('access_token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        window.location.href = data.user.role === 'tutor' ? 'tutor_dashboard.html' : 'student_dashboard.html';
+      } catch (e) { err.textContent = e.message; err.style.display = 'block'; }
+      finally { btn.disabled = false; btn.textContent = 'تسجيل'; }
+    });
+  </script>
+</body>
+</html>

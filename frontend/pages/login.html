@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل دخول - تفاعلي</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/design-system.css">
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+    .login-card { width: 100%; max-width: 420px; }
+    .login-card .logo { justify-content: center; margin-bottom: 24px; }
+    .login-card h1 { text-align: center; font-size: 1.6rem; margin-bottom: 6px; }
+    .login-card .sub { text-align: center; color: var(--text-gray-muted); margin-bottom: 28px; font-size: 0.9rem; }
+    .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--text-gray-muted); font-size: 0.8rem; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
+  </style>
+</head>
+<body>
+  <div class="glow-ambient glow-purple"></div>
+  <div class="glow-ambient glow-blue"></div>
+  <div class="glass-card login-card" style="padding:28px;">
+    <a href="../index.html" class="logo"><span class="logo-cap"><i class="fas fa-graduation-cap"></i></span> تفاعلي</a>
+    <h1>تسجيل دخول</h1>
+    <p class="sub">أهلاً بعودتك! سجل دخولك للمتابعة</p>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label>البريد الإلكتروني أو اسم المستخدم</label>
+        <input type="text" id="email" required placeholder="ahmed@example.com">
+      </div>
+      <div class="form-group">
+        <label>كلمة المرور</label>
+        <input type="password" id="password" required placeholder="********">
+      </div>
+      <p class="error" id="errorMsg" style="color:#EF4444;font-size:0.85rem;text-align:center;display:none;"></p>
+      <button type="submit" class="btn btn-primary" id="submitBtn" style="width:100%;">دخول</button>
+    </form>
+
+    <div class="divider">أو</div>
+
+    <div style="text-align:center;font-size:0.9rem;color:var(--text-muted);">
+      ما عندك حساب؟ <a href="register.html" style="color:var(--accent-purple);font-weight:600;">سجل الآن</a>
+    </div>
+  </div>
+
+  <script src="../js/shared.js"></script>
+  <script>
+    redirectIfAuth();
+
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const err = document.getElementById('errorMsg');
+      btn.disabled = true; btn.textContent = 'جاري الدخول...'; err.style.display = 'none';
+      try {
+        const res = await fetch(API_BASE + '/login/', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: document.getElementById('email').value, password: document.getElementById('password').value }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'بيانات الدخول غير صحيحة');
+        localStorage.setItem('access_token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        window.location.href = data.user.role === 'tutor' ? 'tutor_dashboard.html' : 'student_dashboard.html';
+      } catch (e) { err.textContent = e.message; err.style.display = 'block'; }
+      finally { btn.disabled = false; btn.textContent = 'دخول'; }
+    });
+  </script>
+</body>
+</html>

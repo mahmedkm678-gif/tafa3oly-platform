@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تفاعلي — منصة التعليم الذكية</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
+:root {
+    --bg-dark-base: hsl(223,47%,7%); --bg-dark-card: hsl(222,47%,12%); --bg-dark-card-hover: hsl(222,47%,16%);
+    --primary-blue: hsl(217,91%,60%); --accent-purple: hsl(263,90%,65%);
+    --text-white: hsl(210,40%,98%); --text-gray-light: hsl(215,20%,90%);
+    --text-gray-muted: hsl(215,16%,65%); --text-muted: hsl(215,16%,65%); --text-gray: hsl(215,16%,65%);
+    --glass-bg: rgba(10,19,44,0.6); --bg-card: hsl(222,47%,12%);
+    --grad-primary: linear-gradient(135deg,var(--primary-blue),var(--accent-purple));
+    --grad-text: linear-gradient(135deg,#fff 30%,#C3B4FC 100%);
+    --font-ar: 'Tajawal',sans-serif;
+    --transition-smooth: all 0.4s cubic-bezier(0.16,1,0.3,1);
+    --transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+    --border-glass: 1px solid rgba(255,255,255,0.08);
+    --border-glass-active: 1px solid rgba(139,92,246,0.4);
+    --radius-lg: 24px; --radius-md: 16px; --radius-sm: 8px;
+    --shadow-premium: 0 20px 40px -15px rgba(0,0,0,0.5);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{background-color:var(--bg-dark-base);color:var(--text-white);font-family:var(--font-ar);direction:rtl;text-align:right;line-height:1.6;overflow-x:hidden;position:relative;min-height:100vh}
+body::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(circle at 10% 20%,rgba(59,130,246,0.05) 0%,transparent 40%),radial-gradient(circle at 80% 50%,rgba(139,92,246,0.06) 0%,transparent 45%),linear-gradient(rgba(255,255,255,0.007) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.007) 1px,transparent 1px);background-size:100% 100%,100% 100%,60px 60px,60px 60px;z-index:-2;pointer-events:none}
+a{color:inherit;text-decoration:none;transition:var(--transition-smooth)}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:var(--bg-dark-base)}::-webkit-scrollbar-thumb{background:var(--bg-dark-card-hover);border-radius:4px}
+.container{max-width:1280px;margin:0 auto;padding:0 24px}
+.gradient-text{background:var(--grad-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.gradient-text-accent{background:var(--grad-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.glow-ambient{position:fixed;width:300px;height:300px;border-radius:50%;filter:blur(120px);opacity:0.15;pointer-events:none;z-index:-1}
+.glow-purple{background:var(--accent-purple);top:10%;left:10%}
+.glow-blue{background:var(--primary-blue);bottom:10%;right:10%}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 24px;border-radius:var(--radius-md);font-weight:700;font-size:.95rem;cursor:pointer;transition:var(--transition-smooth);border:none}
+.btn-primary{background:var(--grad-primary);color:#fff;box-shadow:0 10px 30px -10px rgba(139,92,246,0.5)}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 15px 35px -8px rgba(139,92,246,0.7)}
+.btn-secondary{background:rgba(255,255,255,0.04);color:var(--text-white);border:var(--border-glass);backdrop-filter:blur(10px)}
+.btn-secondary:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2);transform:translateY(-3px)}
+.btn-sm{padding:8px 16px;font-size:.85rem}
+.btn-ghost{background:transparent;color:var(--text-gray-muted);border:1px solid rgba(255,255,255,0.1)}
+.btn-ghost:hover{background:rgba(255,255,255,0.05);color:var(--text-white)}
+.btn-success{background:#10B981;color:#fff}.btn-success:hover{background:#059669;transform:translateY(-2px)}
+.btn-danger{background:#EF4444;color:#fff}.btn-danger:hover{background:#DC2626}
+.btn:disabled{opacity:0.5;cursor:not-allowed;transform:none!important}
+.glass-card{background:rgba(10,19,44,0.6);backdrop-filter:blur(16px) saturate(180%);border:var(--border-glass);border-radius:var(--radius-lg);box-shadow:var(--shadow-premium)}
+.card{background:var(--bg-dark-card);border:var(--border-glass);border-radius:var(--radius-lg);padding:24px;margin-bottom:20px;box-shadow:var(--shadow-premium)}
+.card h3{color:var(--primary-blue);margin-bottom:16px;font-size:1.1rem}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;color:var(--text-gray-light);font-weight:700;margin-bottom:6px;font-size:.85rem}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 14px;background:rgba(255,255,255,0.03);border:var(--border-glass);border-radius:var(--radius-sm);color:var(--text-white);font-size:.95rem;font-family:inherit;transition:var(--transition-smooth)}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--accent-purple);box-shadow:0 0 20px rgba(139,92,246,0.15);background:rgba(139,92,246,0.05)}
+.form-group textarea{resize:vertical;min-height:70px}
+select{appearance:none;background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:left 12px center;background-size:16px}
+.form-row{display:flex;gap:12px;flex-wrap:wrap}
+.form-row .form-group{flex:1;min-width:140px}
+.badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:600}
+.badge-pending,.badge-Pending{background:#fef3c7;color:#92400e}
+.badge-matched,.badge-Matched,.badge-accepted,.badge-Accepted{background:#dbeafe;color:#1e40af}
+.badge-done,.badge-Done{background:#d1fae5;color:#065f46}
+.badge-rejected,.badge-Rejected{background:#fee2e2;color:#991b1b}
+.badge-scheduled,.badge-Scheduled{background:#dbeafe;color:#1e40af}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th{text-align:right;background:rgba(255,255,255,0.03);color:var(--text-gray-muted);padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.06);font-weight:600}
+td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--text-gray-muted)}
+.empty{color:var(--text-gray-muted);text-align:center;padding:30px 0}
+.header{position:fixed;top:0;left:0;width:100%;z-index:1000;background:rgba(7,11,25,0.7);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,0.05);transition:var(--transition-smooth)}
+.nav-wrapper{display:flex;align-items:center;justify-content:space-between;height:80px}
+.logo{display:flex;align-items:center;gap:12px;font-weight:800;font-size:1.5rem}
+.logo-cap{width:40px;height:40px;background:var(--grad-primary);border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 16px rgba(139,92,246,0.3)}
+.logo-cap i{color:#fff;font-size:1.2rem}
+.nav-menu{display:flex;align-items:center;list-style:none;gap:32px}
+.nav-link{font-weight:600;font-size:.9rem;color:var(--text-gray-muted);position:relative;padding:8px 0;cursor:pointer}
+.nav-link::after{content:'';position:absolute;bottom:0;right:0;width:0;height:2px;background:var(--grad-primary);transition:var(--transition-smooth)}
+.nav-link:hover,.nav-link.active{color:var(--text-white)}
+.nav-link:hover::after,.nav-link.active::after{width:100%}
+.nav-actions{display:flex;align-items:center;gap:12px}
+.menu-toggle{display:none;background:none;border:none;color:var(--text-white);font-size:1.5rem;cursor:pointer}
+.tab-bar{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.tab{padding:6px 16px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-gray-muted);cursor:pointer;font-size:.82rem;font-weight:600;transition:var(--transition-smooth);white-space:nowrap}
+.tab:hover{background:rgba(255,255,255,0.05);border-color:rgba(139,92,246,0.3)}
+.tab.active{background:var(--grad-primary);color:#fff;border-color:transparent}
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);justify-content:center;align-items:center;z-index:2000}
+.modal-overlay.active{display:flex}
+.modal{background:var(--bg-dark-card);border:var(--border-glass);border-radius:var(--radius-lg);padding:28px;width:90%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.4)}
+.modal h3{color:var(--primary-blue);margin-bottom:16px}
+.modal-btns{display:flex;gap:10px;margin-top:12px}.modal-btns .btn{flex:1}
+.footer{background:var(--bg-dark-card);border-top:var(--border-glass);padding:60px 0 30px;margin-top:40px}
+.footer-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px}
+.footer-brand p{color:var(--text-gray-muted);font-size:.9rem;margin:16px 0 20px}
+.social-links{display:flex;gap:10px}
+.social-icon{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.03);border:var(--border-glass);display:flex;align-items:center;justify-content:center;transition:var(--transition-smooth)}
+.social-icon:hover{background:var(--grad-primary);border-color:transparent;transform:translateY(-3px)}
+.footer-nav-title{font-weight:700;margin-bottom:20px}
+.footer-nav-list{list-style:none;display:flex;flex-direction:column;gap:12px}
+.footer-nav-link{color:var(--text-gray-muted);font-size:.88rem;transition:var(--transition-smooth);cursor:pointer}
+.footer-nav-link:hover{color:var(--accent-purple);padding-right:4px}
+.footer-bottom{border-top:var(--border-glass);padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.copyright{font-size:.82rem;color:var(--text-gray-muted)}
+.price-box{background:rgba(139,92,246,0.05);border-radius:var(--radius-md);padding:16px;display:flex;gap:16px;flex-wrap:wrap}
+.price-item{text-align:center;flex:1;min-width:100px}
+.price-item .num{font-size:1.3rem;font-weight:700;color:var(--accent-purple)}
+.price-item .lbl{font-size:.78rem;color:var(--text-gray-muted)}
+.progress-entry{border-right:3px solid var(--accent-purple);padding-right:12px;margin-bottom:12px}
+.progress-entry .date{font-size:.78rem;color:var(--text-gray-muted)}
+.progress-entry .fromto{font-weight:700;color:var(--accent-purple)}
+.hidden{display:none!important}
+.tutor-card{display:flex;align-items:center;gap:14px;padding:14px;background:rgba(10,19,44,0.6);border:var(--border-glass);border-radius:var(--radius-md);margin-bottom:10px;transition:var(--transition-smooth)}
+.tutor-card:hover{background:rgba(255,255,255,0.04)}
+.tutor-card img{width:48px;height:48px;border-radius:50%;object-fit:cover;flex-shrink:0}
+.tutor-info{flex:1}.tutor-info .name{font-weight:700;font-size:.95rem}
+.tutor-info .detail{font-size:.78rem;color:var(--text-gray-muted)}
+.session-card{background:rgba(10,19,44,0.6);border:var(--border-glass);border-radius:var(--radius-md);padding:16px;margin-bottom:12px}
+.progress-row{border-right:3px solid var(--accent-purple);padding-right:10px;margin-bottom:8px;font-size:.85rem}
+.upload-zone{border:2px dashed rgba(139,92,246,0.2);border-radius:var(--radius-md);padding:24px;text-align:center;transition:var(--transition-smooth)}
+.upload-zone:hover{border-color:var(--accent-purple);background:rgba(139,92,246,0.03)}
+.checkbox-group{display:flex;flex-wrap:wrap;gap:8px}
+.checkbox-group label{display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(255,255,255,0.03);border:var(--border-glass);border-radius:var(--radius-sm);cursor:pointer;font-size:.85rem;color:var(--text-gray-muted);transition:var(--transition-smooth)}
+.checkbox-group label:hover{background:rgba(139,92,246,0.08)}
+.checkbox-group label:has(input:checked){border-color:var(--accent-purple);background:rgba(139,92,246,0.1)}
+.checkbox-group input{display:none}
+.online-badge{display:inline-flex;align-items:center;gap:6px;font-size:.82rem;color:#10B981;font-weight:600}
+.online-badge .dot{width:10px;height:10px;border-radius:50%;background:#10B981}
+.hidden-page{display:none}
+#navbar{padding-top:80px}
+@media(max-width:768px){
+.nav-menu{display:none;position:absolute;top:80px;left:0;width:100%;background:var(--bg-dark-base);border-bottom:var(--border-glass);flex-direction:column;padding:32px;gap:24px}
+.nav-menu.open{display:flex}.nav-actions{display:none}.menu-toggle{display:block}
+.footer-grid{grid-template-columns:1fr 1fr}.form-row{flex-direction:column}.form-row .form-group{min-width:100%}
+}
+@media(max-width:480px){.footer-grid{grid-template-columns:1fr}.footer-bottom{flex-direction:column;text-align:center}}
+</style>
+</head>
+<body>
+<div class="glow-ambient glow-purple"></div>
+<div class="glow-ambient glow-blue"></div>
+<div id="navbar"></div>
+
+<!-- ==================== HOME ==================== -->
+<div id="page-home" class="hidden-page">
+<section style="text-align:center;padding:80px 0 60px;background:radial-gradient(ellipse at 50% 0%,rgba(139,92,246,0.12) 0%,transparent 60%)">
+<div class="container">
+<h1 style="font-size:3rem;font-weight:900;margin-bottom:16px;line-height:1.2">منصة <span class="gradient-text">تفاعلي</span> التعليمية</h1>
+<p style="color:var(--text-muted);font-size:1.15rem;max-width:600px;margin:0 auto 40px">ارفع ملفك الأكاديمي، دع الذكاء الاصطناعي يحلل مستواك، وابدأ التعلم مع أفضل المدرسين في العالم العربي</p>
+<div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+<button class="btn btn-primary" onclick="navigate('register')"><i class="fas fa-user-plus"></i> إنشاء حساب مجاني</button>
+<button class="btn btn-secondary" onclick="navigate('quran-request')"><i class="fas fa-mosque"></i> تحفيظ قرآن</button>
+<button class="btn btn-ghost" onclick="navigate('login')"><i class="fas fa-sign-in-alt"></i> تسجيل دخول</button>
+</div></div></section>
+
+<section class="container" style="padding-bottom:60px">
+<div style="text-align:center;margin-bottom:10px">
+<span class="badge badge-matched" style="font-size:.9rem;padding:6px 18px">المستويات التعليمية</span>
+<h2 style="font-size:2rem;font-weight:800;margin-top:16px">اختر <span class="gradient-text">مستواك</span> التعليمي</h2>
+<p style="color:var(--text-muted);margin-top:8px">جميع المراحل الدراسية ودورات اللغات تحت سقف واحد</p>
+</div>
+<div id="homeLevelsGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:20px;margin-top:40px"></div>
+</section>
+
+<section style="padding:80px 0;text-align:center">
+<div class="container">
+<h2 style="font-size:2rem;font-weight:800;margin-bottom:16px">كيف <span class="gradient-text">تعمل</span> المنصة؟</h2>
+<p style="color:var(--text-muted);max-width:500px;margin:0 auto 50px">أربع خطوات بسيطة لبدء رحلة التعلم</p>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px">
+<div style="text-align:center"><div style="width:52px;height:52px;border-radius:50%;background:var(--grad-primary);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.3rem;font-weight:900">1</div><h4 style="margin-bottom:8px">إنشاء حساب</h4><p style="color:var(--text-muted);font-size:.85rem">سجل كطالب أو مدرس في دقيقة واحدة</p></div>
+<div style="text-align:center"><div style="width:52px;height:52px;border-radius:50%;background:var(--grad-primary);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.3rem;font-weight:900">2</div><h4 style="margin-bottom:8px">رفع المستوى</h4><p style="color:var(--text-muted);font-size:.85rem">ارفع ملفك الأكاديمي والذكاء الاصطناعي يحلله</p></div>
+<div style="text-align:center"><div style="width:52px;height:52px;border-radius:50%;background:var(--grad-primary);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.3rem;font-weight:900">3</div><h4 style="margin-bottom:8px">التوافق</h4><p style="color:var(--text-muted);font-size:.85rem">اختر المدرس المناسب لمستواك وميزانيتك</p></div>
+<div style="text-align:center"><div style="width:52px;height:52px;border-radius:50%;background:var(--grad-primary);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.3rem;font-weight:900">4</div><h4 style="margin-bottom:8px">ابدأ التعلم</h4><p style="color:var(--text-muted);font-size:.85rem">جلسات تفاعلية مع متابعة مستمرة للتقدم</p></div>
+</div></div></section>
+
+<section class="container">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-top:50px" id="featuresGrid"></div>
+</section>
+
+<section style="padding:80px 0;text-align:center;background:radial-gradient(ellipse at 50% 50%,rgba(139,92,246,0.08) 0%,transparent 60%)">
+<div class="container">
+<h2 style="font-size:2.2rem;font-weight:800;margin-bottom:12px">جاهز <span class="gradient-text">لبدء</span> رحلة التعلم؟</h2>
+<p style="color:var(--text-muted);margin-bottom:28px">انضم إلى آلاف الطلاب والمدرسين في منصة تفاعلي</p>
+<button class="btn btn-primary" onclick="navigate('register')"><i class="fas fa-rocket"></i> ابدأ الآن مجاناً</button>
+<button class="btn btn-secondary" style="margin-right:10px" onclick="navigate('quran-request')"><i class="fas fa-mosque"></i> تحفيظ قرآن</button>
+</div></section>
+</div>
+
+<!-- ==================== LOGIN ==================== -->
+<div id="page-login" class="hidden-page" style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:100px 24px 40px">
+<div class="glass-card" style="width:100%;max-width:420px;padding:28px">
+<a href="/" class="logo" style="justify-content:center;margin-bottom:24px"><span class="logo-cap"><i class="fas fa-graduation-cap"></i></span> تفاعلي</a>
+<h1 style="text-align:center;font-size:1.6rem;margin-bottom:6px">تسجيل دخول</h1>
+<p style="text-align:center;color:var(--text-gray-muted);margin-bottom:28px;font-size:.9rem">أهلاً بعودتك! سجل دخولك للمتابعة</p>
+<form id="loginForm">
+<div class="form-group"><label>البريد الإلكتروني أو اسم المستخدم</label><input type="text" id="loginEmail" required placeholder="ahmed@example.com"></div>
+<div class="form-group"><label>كلمة المرور</label><input type="password" id="loginPassword" required placeholder="********"></div>
+<p id="loginError" style="color:#EF4444;font-size:.85rem;text-align:center;display:none"></p>
+<button type="submit" class="btn btn-primary" style="width:100%" id="loginBtn">دخول</button>
+</form>
+<div style="display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--text-gray-muted);font-size:.8rem"><span style="flex:1;height:1px;background:rgba(255,255,255,0.06)"></span>أو<span style="flex:1;height:1px;background:rgba(255,255,255,0.06)"></span></div>
+<div style="text-align:center;font-size:.9rem;color:var(--text-gray-muted)">ما عندك حساب؟ <a href="#" onclick="navigate('register');return false" style="color:var(--accent-purple);font-weight:600">سجل الآن</a></div>
+</div></div>
+
+<!-- ==================== REGISTER ==================== -->
+<div id="page-register" class="hidden-page" style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:100px 24px 40px">
+<div class="glass-card" style="width:100%;max-width:600px;padding:28px">
+<a href="/" class="logo" style="justify-content:center;margin-bottom:24px"><span class="logo-cap"><i class="fas fa-graduation-cap"></i></span> تفاعلي</a>
+<h1 style="text-align:center;font-size:1.6rem;margin-bottom:6px">إنشاء حساب جديد</h1>
+<p style="text-align:center;color:var(--text-gray-muted);margin-bottom:28px;font-size:.9rem">سجل كمدرس أو طالب في المنصة</p>
+<form id="registerForm">
+<div class="form-row"><div class="form-group"><label>الاسم الأول</label><input type="text" id="regFirstName" required placeholder="أحمد"></div><div class="form-group"><label>الاسم الأخير</label><input type="text" id="regLastName" required placeholder="محمد"></div></div>
+<div class="form-row"><div class="form-group"><label>اسم المستخدم</label><input type="text" id="regUsername" required placeholder="ahmed123"></div><div class="form-group"><label>نوع الحساب</label><select id="regRole"><option value="student">طالب</option><option value="tutor">مدرس</option></select></div></div>
+<div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="regEmail" required placeholder="ahmed@example.com"></div>
+<div class="form-group"><label>كلمة المرور</label><input type="password" id="regPassword" required minlength="8" placeholder="أقل 8 أحرف"></div>
+<div class="form-group"><label>المستوى الدراسي</label><div id="regLevels" class="checkbox-group"></div><div style="color:var(--text-gray-muted);font-size:.75rem;margin-top:4px" id="regLevelHint">اختر مستوى واحد للتخصص كمدرس / مستوى أو أكثر كطالب</div></div>
+<div class="form-group"><label>التخصص</label><input type="text" id="regSpecialization" placeholder="مثال: تحفيظ قرآن, رياضيات, لغة إنجليزية"></div>
+<div id="regPaypalGroup" class="form-group" style="display:none"><label>بريد PayPal (للاستلام)</label><input type="email" id="regPaypalEmail" placeholder="tutor@paypal.com"></div>
+<div id="regLangGroup" class="form-group" style="display:none"><label>اللغات التي تدرسها</label><div id="regLangs" class="checkbox-group"></div></div>
+<div id="regTutorFields" style="border-top:1px solid rgba(255,255,255,0.06);padding-top:18px;margin-top:18px;display:none">
+<h3 style="color:var(--primary-blue);font-size:1rem;margin-bottom:14px">بيانات المدرس</h3>
+<div class="form-group"><label>سنوات الخبرة</label><input type="number" id="regExperience" min="0" placeholder="مثال: 5"></div>
+<div class="form-group"><label>المؤهل العلمي</label><input type="text" id="regEducation" placeholder="مثال: بكالوريوس لغة عربية - جامعة الأزهر"></div>
+<div class="form-group"><label>الإجازات والشهادات</label><textarea id="regCertificates" placeholder="مثال: إجازة برواية حفص عن عاصم..."></textarea></div>
+<div class="form-group"><label>نبذة عني</label><textarea id="regBio" placeholder="اكتب نبذة مختصرة عن خبراتك..."></textarea></div>
+</div>
+<p id="regError" style="color:#EF4444;font-size:.85rem;text-align:center;display:none"></p>
+<button type="submit" class="btn btn-primary" style="width:100%" id="regBtn">تسجيل</button>
+</form>
+<div style="text-align:center;margin-top:18px;font-size:.9rem;color:var(--text-gray-muted)">لديك حساب؟ <a href="#" onclick="navigate('login');return false" style="color:var(--accent-purple);font-weight:600">تسجيل دخول</a></div>
+</div></div>
+
+<!-- ==================== QURAN REQUEST ==================== -->
+<div id="page-quran-request" class="hidden-page">
+<div class="container" style="padding-top:40px;padding-bottom:40px">
+<div style="text-align:center;padding:40px 0"><i class="fas fa-mosque" style="font-size:3rem;color:#10B981;margin-bottom:12px"></i>
+<h1 style="font-size:2rem;font-weight:800;margin-bottom:8px">طلب <span class="gradient-text">تحفيظ قرآن</span> جديد</h1>
+<p style="color:var(--text-gray-muted);max-width:500px;margin:0 auto">اختر جزأ البداية وحدد أوقاتك المتاحة لنجد لك المدرس المناسب</p></div>
+<div class="glass-card" style="max-width:640px;margin:0 auto;padding:24px">
+<form id="quranForm">
+<input type="hidden" name="education_level" value="quran">
+<div class="form-row"><div class="form-group"><label>من الجزء</label><input type="number" name="start_juz" min="1" max="30" value="1" required></div><div class="form-group"><label>الجزء الحالي</label><input type="number" name="current_juz" min="1" max="30" value="1" required></div></div>
+<div class="form-row"><div class="form-group"><label>الدولة</label><select name="country" required><option value="SA">السعودية</option><option value="KW">الكويت</option><option value="AE">الإمارات</option><option value="QA">قطر</option></select></div><div class="form-group"><label>نوع الجلسة</label><select name="session_type" id="quranSessionType" required><option value="solo">فردي</option><option value="group">مجموعة</option></select></div><div class="form-group" id="quranStudentsGroup" style="display:none"><label>عدد الطلاب</label><input type="number" name="students_count" value="2" min="2" max="10"></div></div>
+<div class="form-group"><label>أوقاتك المتاحة</label><div id="quranAvailability" style="display:flex;flex-direction:column;gap:8px"></div></div>
+<div class="form-group"><label>ملاحظات</label><textarea name="notes" placeholder="أي ملاحظات للمدرس..."></textarea></div>
+<div id="quranResult" style="display:none;margin-bottom:12px"></div>
+<button type="submit" class="btn btn-primary" style="width:100%" id="quranBtn">إرسال الطلب</button>
+</form></div>
+<div style="text-align:center;margin-top:20px"><button class="btn btn-secondary" onclick="navigate('student-dashboard')"><i class="fas fa-arrow-right"></i> العودة للوحة التحكم</button></div>
+</div></div>
+
+<!-- ==================== STUDENT DASHBOARD ==================== -->
+<div id="page-student-dashboard" class="hidden-page">
+<div class="container" style="padding-top:32px;padding-bottom:40px">
+<h2 style="margin-bottom:6px">مرحباً، <span class="gradient-text" id="sdUserName"></span></h2>
+<p style="color:var(--text-muted);margin-bottom:20px;font-size:.9rem" id="sdLevels"></p>
+<div class="card" style="padding:16px"><div class="tab-bar" id="sdTabs"></div><div id="sdContent"></div></div>
+</div></div>
+
+<!-- ==================== TUTOR DASHBOARD ==================== -->
+<div id="page-tutor-dashboard" class="hidden-page">
+<div class="container" style="padding-top:32px;padding-bottom:40px">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+<div><h2 style="margin-bottom:4px">مرحباً، أ. <span class="gradient-text" id="tdUserName"></span></h2><span style="color:var(--text-muted);font-size:.85rem" id="tdLevel"></span></div>
+<div style="display:flex;align-items:center;gap:12px"><span class="online-badge"><span class="dot"></span> متصل</span><button class="btn btn-sm btn-secondary" onclick="navigate('edit-profile')"><i class="fas fa-user-edit"></i> تعديل البروفايل</button></div></div>
+<div class="card" style="padding:16px"><div class="tab-bar" id="tdTabs"></div><div id="tdContent"></div></div>
+</div></div>
+
+<!-- ==================== EDIT PROFILE ==================== -->
+<div id="page-edit-profile" class="hidden-page">
+<div class="container" style="padding-top:32px;padding-bottom:40px;max-width:640px">
+<h2 style="margin-bottom:4px">تعديل الملف الشخصي</h2>
+<p style="color:var(--text-muted);margin-bottom:24px;font-size:.9rem">حدّث بياناتك الشخصية والمهنية</p>
+<div class="glass-card" style="padding:24px">
+<form id="profileForm">
+<div class="form-row"><div class="form-group"><label>الاسم الأول</label><input type="text" id="edFirstName" required></div><div class="form-group"><label>الاسم الأخير</label><input type="text" id="edLastName" required></div></div>
+<div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="edEmail" required></div>
+<div class="form-group"><label>التخصص</label><input type="text" id="edSpecialization" placeholder="مثال: تحفيظ قرآن, رياضيات"></div>
+<div class="form-group" id="edPaypalGroup"><label>بريد PayPal</label><input type="email" id="edPaypal" placeholder="tutor@paypal.com"></div>
+<div id="edTutorOnly">
+<div class="form-group"><label>سنوات الخبرة</label><input type="number" id="edExperience" min="0"></div>
+<div class="form-group"><label>المؤهل العلمي</label><input type="text" id="edEducation" placeholder="بكالوريوس..."></div>
+<div class="form-group"><label>الإجازات والشهادات</label><textarea id="edCertificates" placeholder="إجازة برواية حفص..."></textarea></div>
+<div class="form-group"><label>نبذة عني</label><textarea id="edBio" placeholder="نبذة مختصرة عن خبراتك..."></textarea></div>
+<div class="form-group"><label>المستوى الدراسي (مختص به)</label><select id="edTeachingLevel"></select></div>
+<div class="form-group" id="edLangGroup" style="display:none"><label>اللغات التي تدرسها</label><div id="edLangs" class="checkbox-group"></div></div>
+</div>
+<div id="edStudentOnly" style="display:none"><div class="form-group"><label>المستويات الدراسية</label><div id="edStudentLevels" class="checkbox-group"></div></div></div>
+<p id="edError" style="color:#EF4444;font-size:.85rem;display:none"></p>
+<button type="submit" class="btn btn-primary" style="width:100%" id="edBtn">حفظ التغييرات</button>
+</form></div></div></div>
+
+<!-- ==================== FOOTER + MODALS ==================== -->
+<div id="footer"></div>
+
+<div class="modal-overlay" id="tutorModal" onclick="if(event.target===this)this.classList.remove('active')"><div class="modal" id="tutorModalContent"></div></div>
+<div class="modal-overlay" id="offerModal"><div class="modal"><h3>إرسال عرض سعر</h3><p id="modalFileInfo" style="color:var(--text-muted);margin-bottom:12px;font-size:.9rem"></p><div class="form-group"><label>سعرك</label><input type="number" id="modalPrice" step="0.01" min="1"></div><div class="form-group"><label>نوع الدفع</label><select id="modalPaymentType"><option value="per_session">بالحصة</option><option value="monthly">شهري</option></select></div><div class="modal-btns"><button class="btn btn-primary" onclick="submitOffer()">إرسال العرض</button><button class="btn btn-ghost" onclick="closeModal('offerModal')">إلغاء</button></div><p id="modalError" style="color:#EF4444;font-size:.85rem;margin-top:8px;display:none"></p></div></div>
+<div class="modal-overlay" id="progressModal"><div class="modal"><h3>تسجيل تقدم</h3><p id="progressSessionInfo" style="color:var(--text-muted);margin-bottom:12px;font-size:.9rem"></p><div id="progressFields"></div><div class="form-group"><label>ملاحظات المدرس</label><textarea id="progressTutorNotes" placeholder="..."></textarea></div><div class="modal-btns"><button class="btn btn-success" onclick="submitProgress()">حفظ</button><button class="btn btn-ghost" onclick="closeModal('progressModal')">إلغاء</button></div><p id="progressError" style="color:#EF4444;font-size:.85rem;margin-top:8px;display:none"></p></div></div>
+
+<script>
+// ==================== CONSTANTS ====================
+const API_BASE = 'http://127.0.0.1:8000';
+const LEVELS_DATA = [
+  {code:'quran',label:'القرآن الكريم',icon:'fa-mosque'},
+  {code:'university',label:'الجامعة',icon:'fa-university'},
+  {code:'high_school',label:'الثانوية',icon:'fa-school'},
+  {code:'middle_school',label:'المتوسطة',icon:'fa-book-open'},
+  {code:'primary',label:'الابتدائية',icon:'fa-child'},
+  {code:'kindergarten',label:'رياض الأطفال',icon:'fa-cubes'},
+  {code:'languages',label:'اللغات',icon:'fa-language'}
+];
+const LEVEL_ICONS = {quran:'fa-mosque',university:'fa-university',high_school:'fa-school',middle_school:'fa-book-open',primary:'fa-child',kindergarten:'fa-cubes',languages:'fa-language'};
+const LEVEL_MAP = {quran:'القرآن الكريم',university:'الجامعة',high_school:'الثانوية',middle_school:'المتوسطة',primary:'الابتدائية',kindergarten:'رياض الأطفال',languages:'اللغات'};
+const LANG_DATA = [
+  {code:'en',label:'الإنجليزية'},{code:'fr',label:'الفرنسية'},{code:'de',label:'الألمانية'},{code:'es',label:'الإسبانية'},
+  {code:'it',label:'الإيطالية'},{code:'tr',label:'التركية'},{code:'zh',label:'الصينية'},{code:'ru',label:'الروسية'}
+];
+const LANG_MAP = {en:'الإنجليزية',fr:'الفرنسية',de:'الألمانية',es:'الإسبانية',it:'الإيطالية',tr:'التركية',zh:'الصينية',ru:'الروسية'};
+const DAYS = [{key:'sat',label:'السبت'},{key:'sun',label:'الأحد'},{key:'mon',label:'الإثنين'},{key:'tue',label:'الثلاثاء'},{key:'wed',label:'الأربعاء'},{key:'thu',label:'الخميس'},{key:'fri',label:'الجمعة'}];
+
+// ==================== AUTH ====================
+function getToken(){return localStorage.getItem('access_token')}
+function getUser(){try{return JSON.parse(localStorage.getItem('user')||'{}')}catch{return{}}}
+function setUserData(u){localStorage.setItem('user',JSON.stringify(u))}
+function isLoggedIn(){return!!getToken()}
+function getRole(){return getUser().role||''}
+function isStudent(){return getRole()==='student'}
+function isTutor(){return getRole()==='tutor'}
+async function api(m,u,b){
+  const opts={method:m,headers:{'Authorization':'Bearer '+getToken()}};
+  if(b){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(b)}
+  const r=await fetch(API_BASE+u,opts);
+  const d=await r.json();
+  if(!r.ok){const e=new Error(d.error||'خطأ');e.data=d;throw e}
+  return d
+}
+
+// ==================== ROUTING ====================
+let currentPage = '';
+function navigate(page){
+  if(page===currentPage) return;
+  if(page==='student-dashboard'&&!isStudent()){navigate('login');return}
+  if(page==='tutor-dashboard'&&!isTutor()){navigate('login');return}
+  if(page==='edit-profile'&&!isLoggedIn()){navigate('login');return}
+  if(page==='quran-request'&&!isLoggedIn()){navigate('login');return}
+  if(page==='login'&&isLoggedIn()){navigate(isStudent()?'student-dashboard':'tutor-dashboard');return}
+  if(page==='register'&&isLoggedIn()){navigate(isStudent()?'student-dashboard':'tutor-dashboard');return}
+  currentPage=page;
+  document.querySelectorAll('.hidden-page').forEach(el=>el.style.display='none');
+  const pg=document.getElementById('page-'+page);
+  if(pg){pg.style.display='';initPage(page)}
+  window.scrollTo(0,0);
+  buildNavbar();
+}
+
+function initPage(page){
+  if(page==='home') initHome();
+  else if(page==='register') initRegister();
+  else if(page==='quran-request') initQuran();
+  else if(page==='student-dashboard') initSD();
+  else if(page==='tutor-dashboard') initTD();
+  else if(page==='edit-profile') initEdit();
+}
+
+// ==================== NAV/FOOTER ====================
+function buildNavbar(){
+  const u=getUser(),li=isLoggedIn();
+  const links=`
+    <li><a class="nav-link" onclick="navigate('home')">الرئيسية</a></li>
+    ${li?(isStudent()?`<li><a class="nav-link" onclick="navigate('student-dashboard')">لوحة التحكم</a></li>`
+    :`<li><a class="nav-link" onclick="navigate('tutor-dashboard')">لوحة التحكم</a></li>`):''}
+    ${li?'':`<li><a class="nav-link" onclick="navigate('register')">انضم الآن</a></li>`}
+  `;
+  const actions=li?`<div style="display:flex;align-items:center;gap:12px"><span style="font-size:.85rem;color:var(--text-gray-muted)">${u.first_name||u.username||''}</span><button class="btn btn-sm btn-ghost" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button></div>`
+    :`<button class="btn btn-sm btn-primary" onclick="navigate('login')">دخول</button><button class="btn btn-sm btn-secondary" onclick="navigate('register')">تسجيل</button>`;
+  document.getElementById('navbar').innerHTML=`
+    <header class="header"><div class="container"><div class="nav-wrapper">
+      <div class="logo" onclick="navigate('home')" style="cursor:pointer"><span class="logo-cap"><i class="fas fa-graduation-cap"></i></span> تفاعلي</div>
+      <ul class="nav-menu" id="navMenu">${links}</ul>
+      <div class="nav-actions">${actions}</div>
+      <button class="menu-toggle" onclick="document.getElementById('navMenu').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+    </div></div></header>`;
+}
+
+function buildFooter(){
+  document.getElementById('footer').innerHTML=`
+    <footer class="footer"><div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand"><div class="logo"><span class="logo-cap"><i class="fas fa-graduation-cap"></i></span> تفاعلي</div><p>منصة التعليم الذكية التي تجمع الطلاب والمدرسين في العالم العربي</p><div class="social-links"><a class="social-icon" href="#"><i class="fab fa-twitter"></i></a><a class="social-icon" href="#"><i class="fab fa-instagram"></i></a><a class="social-icon" href="#"><i class="fab fa-telegram"></i></a><a class="social-icon" href="#"><i class="fab fa-whatsapp"></i></a></div></div>
+        <div><h4 class="footer-nav-title">المستويات</h4><ul class="footer-nav-list">${LEVELS_DATA.map(l=>`<li><a class="footer-nav-link" onclick="navigate('register')">${l.label}</a></li>`).join('')}</ul></div>
+        <div><h4 class="footer-nav-title">روابط سريعة</h4><ul class="footer-nav-list"><li><a class="footer-nav-link" onclick="navigate('home')">الرئيسية</a></li><li><a class="footer-nav-link" onclick="navigate('register')">إنشاء حساب</a></li><li><a class="footer-nav-link" onclick="navigate('login')">تسجيل دخول</a></li></ul></div>
+        <div><h4 class="footer-nav-title">الدعم</h4><ul class="footer-nav-list"><li><a class="footer-nav-link" href="#">الأسئلة الشائعة</a></li><li><a class="footer-nav-link" href="#">الشروط والأحكام</a></li><li><a class="footer-nav-link" href="#">سياسة الخصوصية</a></li><li><a class="footer-nav-link" href="#">اتصل بنا</a></li></ul></div>
+      </div>
+      <div class="footer-bottom"><span class="copyright">© 2026 تفاعلي — جميع الحقوق محفوظة</span><div class="payment-methods"><span class="pay-badge">PayPal</span><span class="pay-badge">Visa</span><span class="pay-badge">Mastercard</span></div></div>
+    </div></footer>`;
+}
+
+function logout(){
+  localStorage.removeItem('access_token');localStorage.removeItem('user');
+  if(currentPage!=='home') navigate('home');
+  else{buildNavbar();buildHomeLevels()}
+}
+
+// ==================== HOME ====================
+const HOME_LEVELS=[
+  {icon:'fa-mosque',color:'#10B981',bg:'rgba(16,185,129,0.1)',title:'القرآن الكريم',desc:'حفظ وتجويد قرآن مع مدرسين متخصصين معتمدين',tag:'حفظ + تجويد',price:'30 ر.س',link:'quran-request'},
+  {icon:'fa-university',color:'#3B82F6',bg:'rgba(59,130,246,0.1)',title:'الجامعة',desc:'مقررات جامعية في جميع التخصصات، أبحاث، مشاريع تخرج',tag:'تخصصات متنوعة',price:'25 ر.س',link:'register'},
+  {icon:'fa-school',color:'#EC4899',bg:'rgba(236,72,153,0.1)',title:'الثانوية',desc:'مواد الثانوية العامة، تحضير للقدرات والتحصيلي',tag:'قدرات + تحصيلي',price:'20 ر.س',link:'register'},
+  {icon:'fa-book-open',color:'#F59E0B',bg:'rgba(245,158,11,0.1)',title:'المتوسطة',desc:'جميع مواد المرحلة المتوسطة، متابعة يومية وواجبات مكثفة',tag:'متابعة مستمرة',price:'15 ر.س',link:'register'},
+  {icon:'fa-child',color:'#10B981',bg:'rgba(16,185,129,0.1)',title:'الابتدائية',desc:'تأسيس قوي في القراءة والكتابة والحساب',tag:'تأسيس + متابعة',price:'20 ر.س',link:'register'},
+  {icon:'fa-cubes',color:'#A855F7',bg:'rgba(168,85,247,0.1)',title:'رياض الأطفال',desc:'برنامج تعليمي مبكر للأطفال، تعلّم باللعب والأنشطة التفاعلية',tag:'لعب + تعلّم',price:'12 ر.س',link:'register'},
+  {icon:'fa-language',color:'#EC4899',bg:'rgba(236,72,153,0.1)',title:'اللغات',desc:'دورات لغة في 8 لغات مع مدرسين ناطقين أصليين',tag:'8 لغات · CEFR',price:'25 ر.س',link:'register',wide:true}
+];
+function initHome(){if(!document.querySelector('#homeLevelsGrid .level-card'))buildHomeLevels();buildFeatures()}
+function buildHomeLevels(){
+  document.getElementById('homeLevelsGrid').innerHTML=HOME_LEVELS.map(l=>`
+    <div class="level-card" style="background:var(--glass-bg);backdrop-filter:blur(12px);border:var(--border-glass);border-radius:var(--radius-lg);padding:28px;transition:var(--transition-smooth);cursor:pointer;position:relative;overflow:hidden;${l.wide?'grid-column:span 2':''}" onclick="navigate('${l.link}')">
+      <div style="width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:16px;background:${l.bg};color:${l.color}"><i class="fas ${l.icon}"></i></div>
+      <h3 style="font-size:1.2rem;margin-bottom:8px">${l.title}</h3>
+      <p style="color:var(--text-muted);font-size:.85rem;line-height:1.6">${l.desc}</p>
+      <span style="display:inline-block;margin-top:12px;padding:4px 12px;background:rgba(139,92,246,0.1);border-radius:20px;color:var(--accent-purple);font-size:.75rem;font-weight:600">${l.tag}</span>
+      <span style="display:inline-block;margin-top:12px;margin-right:6px;padding:4px 12px;background:rgba(59,130,246,0.1);border-radius:20px;color:var(--primary-blue);font-size:.75rem;font-weight:600">${l.price}</span>
+    </div>
+  `).join('');
+}
+
+function buildFeatures(){
+  if(document.querySelector('#featuresGrid .feature-card'))return;
+  document.getElementById('featuresGrid').innerHTML=[
+    {icon:'fa-robot',c:'var(--accent-purple)',t:'تحليل ذكي بالذكاء الاصطناعي',d:'يقوم الذكاء الاصطناعي بتحليل ملفك الأكاديمي وتحديد مستواك بدقة'},
+    {icon:'fa-chart-line',c:'var(--primary-blue)',t:'متابعة التقدم',d:'سجل تقدمك في الحفظ والوحدات ومستويات CEFR بشكل تفصيلي'},
+    {icon:'fab fa-paypal',c:'#0070BA',t:'دفع آمن عبر PayPal',d:'15% رسوم منصة فقط — 85% للمدرس. دفعات مضمونة وموثوقة'},
+    {icon:'fa-hand-holding-usd',c:'#10B981',t:'أسعار شفافة',d:'أسعار تنافسية تبدأ من 12 ر.س للجلسة حسب المستوى والدولة'},
+    {icon:'fas fa-globe',c:'#3B82F6',t:'دول الخليج',d:'أسعار خاصة لكل دولة: السعودية، الكويت، الإمارات، قطر'},
+    {icon:'fa-users',c:'#EC4899',t:'مدرسين متخصصين',d:'كل مدرس متخصص في مستوى واحد فقط لضمان أعلى جودة تعليم'}
+  ].map(f=>`
+    <div class="feature-card" style="background:var(--glass-bg);backdrop-filter:blur(12px);border:var(--border-glass);border-radius:var(--radius-md);padding:24px;text-align:center;transition:var(--transition-smooth)">
+      <i class="${f.icon}" style="font-size:2rem;margin-bottom:12px;color:${f.c}"></i>
+      <h4 style="margin-bottom:8px;font-size:1rem">${f.t}</h4>
+      <p style="color:var(--text-muted);font-size:.82rem">${f.d}</p>
+    </div>
+  `).join('');
+}
+
+// ==================== LOGIN ====================
+document.getElementById('loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();const btn=document.getElementById('loginBtn'),err=document.getElementById('loginError');
+  btn.disabled=true;btn.textContent='جاري الدخول...';err.style.display='none';
+  try{
+    const r=await fetch(API_BASE+'/login/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.getElementById('loginEmail').value,password:document.getElementById('loginPassword').value})});
+    const d=await r.json();if(!r.ok)throw new Error(d.error||'بيانات الدخول غير صحيحة');
+    localStorage.setItem('access_token',d.token);localStorage.setItem('user',JSON.stringify(d.user));
+    navigate(d.user.role==='tutor'?'tutor-dashboard':'student-dashboard');
+  }catch(e){err.textContent=e.message;err.style.display='block'}
+  finally{btn.disabled=false;btn.textContent='دخول'}
+});
+
+// ==================== REGISTER ====================
+function initRegister(){
+  const c=document.getElementById('regLevels');
+  if(c.children.length)return;
+  LEVELS_DATA.forEach(l=>{c.innerHTML+=`<label><input type="checkbox" name="levels" value="${l.code}"><i class="fas ${l.icon}"></i> <span>${l.label}</span></label>`});
+  LANG_DATA.forEach(l=>{document.getElementById('regLangs').innerHTML+=`<label><input type="checkbox" name="langs" value="${l.code}"><span>${l.label}</span></label>`});
+  document.getElementById('regRole').addEventListener('change',function(){
+    const t=this.value==='tutor';
+    document.getElementById('regPaypalGroup').style.display=t?'block':'none';
+    document.getElementById('regTutorFields').style.display=t?'block':'none';
+    document.getElementById('regLangGroup').style.display=t?'block':'none';
+    const cb=c.querySelectorAll('input[type="checkbox"]');
+    cb.forEach(c=>{c.checked=false});
+    document.getElementById('regLevelHint').textContent=t?'اختر مستوى واحد فقط للتخصص كمدرس':'اختر مستوى أو أكثر كطالب';
+  });
+}
+document.getElementById('registerForm').addEventListener('submit',async e=>{
+  e.preventDefault();const btn=document.getElementById('regBtn'),err=document.getElementById('regError');
+  btn.disabled=true;btn.textContent='جاري التسجيل...';err.style.display='none';
+  const cl=[...document.querySelectorAll('#regLevels input:checked')].map(c=>c.value);
+  if(!cl.length){err.textContent='اختر مستوى تعليمي واحد على الأقل';err.style.display='block';btn.disabled=false;btn.textContent='تسجيل';return}
+  const role=document.getElementById('regRole').value;
+  if(role==='tutor'&&cl.length>1){err.textContent='المدرس يختار مستوى واحد فقط';err.style.display='block';btn.disabled=false;btn.textContent='تسجيل';return}
+  const body={username:document.getElementById('regUsername').value,email:document.getElementById('regEmail').value,password:document.getElementById('regPassword').value,first_name:document.getElementById('regFirstName').value,last_name:document.getElementById('regLastName').value,role:role,specialization:document.getElementById('regSpecialization').value};
+  if(role==='tutor'){body.teaching_level=cl[0];body.languages=[...document.querySelectorAll('#regLangs input:checked')].map(c=>c.value);body.paypal_email=document.getElementById('regPaypalEmail').value;body.years_experience=document.getElementById('regExperience').value||null;body.education=document.getElementById('regEducation').value;body.certificates=document.getElementById('regCertificates').value;body.bio=document.getElementById('regBio').value}
+  else body.student_levels=cl;
+  try{
+    const r=await fetch(API_BASE+'/register/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await r.json();if(!r.ok)throw new Error(Object.values(d).flat().join(', '));
+    localStorage.setItem('access_token',d.token);localStorage.setItem('user',JSON.stringify(d.user));
+    navigate(d.user.role==='tutor'?'tutor-dashboard':'student-dashboard');
+  }catch(e){err.textContent=e.message;err.style.display='block'}
+  finally{btn.disabled=false;btn.textContent='تسجيل'}
+});
+
+// ==================== QURAN REQUEST ====================
+function initQuran(){
+  const g=document.getElementById('quranAvailability');
+  if(g.children.length)return;
+  DAYS.forEach(d=>{
+    const r=document.createElement('div');r.style.cssText='display:flex;align-items:center;gap:10px';
+    r.innerHTML=`<span style="min-width:60px;font-weight:600;color:var(--text-gray)">${d.label}</span><input type="text" placeholder="مثال: 4-6 مساءً" style="flex:1;padding:8px 10px;background:rgba(255,255,255,0.03);border:var(--border-glass);border-radius:var(--radius-sm);color:var(--text-white);font-family:inherit"><input type="hidden" name="weekly_availability_${d.key}">`;
+    r.querySelector('input[type="text"]').addEventListener('input',function(){this.nextElementSibling.value=this.value});
+    g.appendChild(r);
+  });
+  document.getElementById('quranSessionType').addEventListener('change',function(){
+    document.getElementById('quranStudentsGroup').style.display=this.value==='group'?'block':'none';
+  });
+}
+document.getElementById('quranForm').addEventListener('submit',async e=>{
+  e.preventDefault();const btn=document.getElementById('quranBtn');
+  btn.disabled=true;btn.textContent='جاري الإرسال...';
+  const times={};document.querySelectorAll('[name^="weekly_availability_"]').forEach(h=>{const d=h.name.replace('weekly_availability_','');if(h.value)times[d]=[h.value]});
+  const f=e.target;
+  const data={education_level:'quran',start_juz:parseInt(f.start_juz.value),current_juz:parseInt(f.current_juz.value),country:f.country.value,session_type:f.sessionType.value,weekly_availability:times,notes:f.notes.value};
+  if(data.session_type==='group')data.students_count=parseInt(f.students_count.value);
+  try{
+    const r=await fetch(API_BASE+'/files/structured-request/',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+getToken()},body:JSON.stringify(data)});
+    const res=await r.json();if(!r.ok)throw new Error(JSON.stringify(res));
+    document.getElementById('quranResult').style.display='block';
+    document.getElementById('quranResult').innerHTML='<div class="price-box" style="margin:0"><div style="color:#10B981;font-weight:700;text-align:center">✅ تم إرسال طلب التحفيظ بنجاح</div></div>';
+    f.reset();
+  }catch(e){alert('خطأ: '+e.message)}
+  finally{btn.disabled=false;btn.textContent='إرسال الطلب'}
+});
+
+// ==================== STUDENT DASHBOARD ====================
+let sdActiveLevel='';
+let sdInterval=null;
+function initSD(){
+  const u=getUser();
+  document.getElementById('sdUserName').textContent=u.first_name||u.username;
+  const sl=u.student_levels||[];
+  document.getElementById('sdLevels').textContent='مستوياتك: '+sl.map(c=>LEVEL_MAP[c]||c).join(' · ');
+  const all=LEVELS_DATA.map(l=>l.code),display=sl.length?sl:all;
+  const tb=document.getElementById('sdTabs');tb.innerHTML='';
+  const cont=document.getElementById('sdContent');
+  display.forEach((l,i)=>{
+    const a=i===0;if(a)sdActiveLevel=l;
+    tb.innerHTML+=`<span class="tab ${a?'active':''}" onclick="sdSwitch('${l}',this)"><i class="fas ${LEVEL_ICONS[l]||'fa-book'}"></i> ${LEVEL_MAP[l]||l}</span>`;
+  });
+  cont.innerHTML=sdBuild(sdActiveLevel);sdLoad(sdActiveLevel);
+  if(sdInterval)clearInterval(sdInterval);
+  sdInterval=setInterval(()=>{if(sdActiveLevel)sdLoad(sdActiveLevel)},15000);
+}
+function sdSwitch(level,el){
+  sdActiveLevel=level;
+  document.querySelectorAll('#sdTabs .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('sdContent').innerHTML=sdBuild(level);sdLoad(level);
+}
+function sdBuild(level){
+  const isStructured=(level==='quran'||level==='kindergarten'||level==='languages');
+  if(isStructured)return sdBuildStructured(level);
+  return sdBuildAcademic(level);
+}
+function sdBuildStructured(level){
+  const extra=level==='quran'?`<div class="form-row"><div class="form-group"><label>جزأ البداية (من)</label><input type="number" name="start_juz" min="1" max="30" value="1" required></div><div class="form-group"><label>الجزء الحالي</label><input type="number" name="current_juz" min="1" max="30" value="1" required></div></div>`
+    :level==='kindergarten'?`<div class="form-row"><div class="form-group"><label>الوحدة الحالية</label><input type="text" name="current_unit" placeholder="مثال: وحدة 3" required></div><div class="form-group"><label>البدء من وحدة</label><input type="text" name="start_unit" placeholder="مثال: وحدة 1" required></div></div>`
+    :`<div class="form-row"><div class="form-group"><label>اللغة</label><select name="language" required>${LANG_DATA.map(l=>`<option value="${l.code}">${l.label}</option>`).join('')}</select></div><div class="form-group"><label>مستوى CEFR الحالي</label><select name="current_cefr" required>${['A1','A2','B1','B2','C1','C2'].map(v=>`<option>${v}</option>`).join('')}</select></div><div class="form-group"><label>البدء من مستوى</label><select name="start_cefr" required>${['A1','A2','B1','B2','C1','C2'].map(v=>`<option>${v}</option>`).join('')}</select></div></div>`;
+  return `
+    <div class="card"><h3>طلب ${LEVEL_MAP[level]} جديد</h3><p style="color:var(--text-muted);font-size:.85rem;margin-bottom:12px">${level==='quran'?'حدد جزأ البداية وأوقاتك المتاحة':level==='kindergarten'?'حدد الوحدة الدراسية الحالية':'حدد مستوى CEFR الحالي واللغة'}</p>
+    <form onsubmit="sdSubmitStructured(event,'${level}')"><input type="hidden" name="education_level" value="${level}">
+    <div class="form-row"><div class="form-group"><label>الدولة</label><select name="country" required><option value="SA">السعودية</option><option value="KW">الكويت</option><option value="AE">الإمارات</option><option value="QA">قطر</option></select></div>
+    <div class="form-group"><label>نوع الجلسة</label><select name="session_type" onchange="this.closest('form').querySelector('.stdGroup').style.display=this.value==='group'?'block':'none'"><option value="solo">فردي</option><option value="group">مجموعة</option></select></div>
+    <div class="form-group stdGroup" style="display:none"><label>عدد الطلاب</label><input type="number" name="students_count" value="2" min="2" max="10"></div></div>
+    ${extra}<div class="form-group"><label>ملاحظات</label><textarea name="notes" placeholder="ملاحظات إضافية..." style="min-height:50px"></textarea></div>
+    <button type="submit" class="btn btn-primary">إرسال الطلب</button></form><div class="sdStructResult hidden" style="margin-top:12px"></div></div>
+    <h3 style="margin-bottom:12px">طلباتي — ${LEVEL_MAP[level]}</h3><div class="sdFiles"><p class="empty">جاري التحميل...</p></div>
+    <h3 style="margin:20px 0 12px">المدرسون المتاحون — ${LEVEL_MAP[level]}</h3><div class="sdTutors"><p class="empty">جاري التحميل...</p></div>
+    <h3 style="margin:20px 0 12px">التقدم — ${LEVEL_MAP[level]}</h3><div class="sdProgress"><p class="empty">لا يوجد تقدم بعد</p></div>
+    <h3 style="margin:20px 0 12px">العروض المقدمة</h3><div class="sdOffers"><p class="empty">لا توجد عروض</p></div>`;
+}
+function sdBuildAcademic(level){
+  return `
+    <div class="card"><h3>رفع ملف أكاديمي جديد — ${LEVEL_MAP[level]}</h3>
+    <div class="upload-zone"><i class="fas fa-cloud-upload-alt" style="font-size:2rem;color:var(--accent-purple);margin-bottom:8px"></i>
+    <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:12px">ارفع ملف PDF وسيحلله الذكاء الاصطناعي لتحديد مستواك واقتراح السعر</p>
+    <form onsubmit="sdSubmitAcademic(event,'${level}')"><input type="file" name="file" accept=".pdf" required style="display:block;margin:0 auto 12px"><input type="hidden" name="education_level" value="${level}">
+    <div class="form-row"><div class="form-group"><label>الدولة</label><select name="country" required><option value="SA">السعودية</option><option value="KW">الكويت</option><option value="AE">الإمارات</option><option value="QA">قطر</option></select></div>
+    <div class="form-group"><label>النوع</label><select name="session_type" onchange="this.closest('form').querySelector('.acGroup').style.display=this.value==='group'?'block':'none'"><option value="solo">فردي</option><option value="group">مجموعة</option></select></div>
+    <div class="form-group acGroup" style="display:none"><label>عدد الطلاب</label><input type="number" name="students_count" value="2" min="2" max="10"></div></div>
+    <button type="submit" class="btn btn-primary">رفع وتحليل بالذكاء الاصطناعي</button></form><div class="sdAcadResult hidden" style="margin-top:12px"></div></div></div>
+    <h3 style="margin:20px 0 12px">ملفاتي — ${LEVEL_MAP[level]}</h3><div class="sdFiles"><p class="empty">جاري التحميل...</p></div>
+    <h3 style="margin:20px 0 12px">المدرسون المتاحون — ${LEVEL_MAP[level]}</h3><div class="sdTutors"><p class="empty">جاري التحميل...</p></div>
+    <h3 style="margin:20px 0 12px">العروض المقدمة</h3><div class="sdOffers"><p class="empty">لا توجد عروض</p></div>`;
+}
+async function sdLoad(level){try{await Promise.all([sdLoadFiles(level),sdLoadTutors(level),sdLoadProgress(level),sdLoadOffers(level)])}catch(){}}
+async function sdLoadFiles(level){
+  const el=document.querySelector('#sdContent .sdFiles');if(!el)return;
+  try{const r=await api('GET','/files/?level='+level);if(!Array.isArray(r)){el.innerHTML='<p class="empty">لا توجد ملفات</p>';return}
+  el.innerHTML=r.length?`<div class="table-wrap"><table><tr><th>#</th><th>الحالة</th><th>التاريخ</th></tr>${r.map(f=>`<tr><td>${f.id}</td><td><span class="badge badge-${f.status}">${f.status}</span></td><td>${new Date(f.created_at).toLocaleDateString('ar')}</td></tr>`).join('')}</table></div>`:'<p class="empty">لا توجد ملفات</p>'
+  }catch{el.innerHTML='<p class="empty">خطأ في التحميل</p>'}
+}
+async function sdLoadTutors(level){
+  const el=document.querySelector('#sdContent .sdTutors');if(!el)return;
+  try{const r=await api('GET','/users/available-tutors/?level='+level);if(!Array.isArray(r)||!r.length){el.innerHTML='<p class="empty">لا يوجد مدرسون متاحون</p>';return}
+  el.innerHTML=r.map(t=>`<div class="tutor-card"><img src="${t.profile_picture_url||''}" onerror="this.style.display='none'"><div class="tutor-info"><div class="name"><span class="online-dot" style="display:inline-block;width:8px;height:8px;background:#10B981;border-radius:50%;margin-left:4px"></span>${t.first_name||''} ${t.last_name||''}</div><div class="detail">${t.specialization||''} ${t.years_experience?'· '+t.years_experience+' سنة':''}</div></div><button class="btn btn-sm btn-ghost" onclick="sdOpenTutor(${t.id})">عرض</button></div>`).join('')
+  }catch{el.innerHTML='<p class="empty">خطأ في التحميل</p>'}
+}
+async function sdLoadProgress(level){
+  const el=document.querySelector('#sdContent .sdProgress');if(!el)return;
+  try{const r=await api('GET','/offers/progress/');if(!Array.isArray(r)||!r.length){el.innerHTML='<p class="empty">لا يوجد تقدم بعد</p>';return}
+  el.innerHTML=r.map(e=>{const ft=e.juz_from?`الجزء ${e.juz_from} ← ${e.juz_to}`:e.unit_from?`${e.unit_from} ← ${e.unit_to}`:e.cefr_from?`${e.cefr_from} ← ${e.cefr_to}`:'—'
+  return `<div class="progress-entry"><div class="date">${new Date(e.created_at).toLocaleDateString('ar')}</div><div class="fromto">${ft}</div>${e.tutor_notes?'<div style="font-size:.85rem;color:var(--text-gray)">📝 '+e.tutor_notes+'</div>':''}</div>`}).join('')
+  }catch{el.innerHTML='<p class="empty">خطأ في التحميل</p>'}
+}
+async function sdLoadOffers(level){
+  const el=document.querySelector('#sdContent .sdOffers');if(!el)return;
+  try{const r=await api('GET','/offers/');if(!Array.isArray(r)||!r.length){el.innerHTML='<p class="empty">لا توجد عروض</p>';return}
+  el.innerHTML=`<div class="table-wrap"><table><tr><th>#</th><th>السعر</th><th>الحالة</th><th>إجراء</th></tr>${r.map(o=>`<tr><td>${o.id}</td><td>${o.tutor_price||o.price}</td><td><span class="badge badge-${o.status}">${o.status}</span></td><td>${o.status==='pending'?`<button class="btn btn-sm btn-primary" onclick="sdAccept(${o.id})">قبول</button>`:'—'}</td></tr>`).join('')}</table></div>`
+  }catch{el.innerHTML='<p class="empty">لا توجد عروض</p>'}
+}
+async function sdSubmitAcademic(e,level){
+  e.preventDefault();const btn=e.target.querySelector('button[type="submit"]');
+  btn.disabled=true;btn.textContent='جاري التحليل...';
+  const fd=new FormData(e.target);
+  try{const r=await fetch(API_BASE+'/files/upload/',{method:'POST',headers:{'Authorization':'Bearer '+getToken()},body:fd});const d=await r.json();if(!r.ok)throw new Error(JSON.stringify(d))
+  const res=e.target.parentElement.querySelector('.sdAcadResult');res.classList.remove('hidden')
+  res.innerHTML=`<div class="price-box"><div class="price-item"><div class="num">${d.base_price||d.pricing_breakdown?.base_price||'—'}</div><div class="lbl">السعر</div></div><div class="price-item"><div class="num">${d.specialization||d.subject_type||'—'}</div><div class="lbl">التخصص</div></div></div>`;sdLoad(level);e.target.reset()
+  }catch(e){alert('خطأ: '+e.message)}finally{btn.disabled=false;btn.textContent='رفع وتحليل بالذكاء الاصطناعي'}
+}
+async function sdSubmitStructured(e,level){
+  e.preventDefault();const btn=e.target.querySelector('button[type="submit"]');
+  btn.disabled=true;btn.textContent='جاري الإرسال...';
+  const data=Object.fromEntries(new FormData(e.target));
+  try{await api('POST','/files/structured-request/',data);const res=e.target.parentElement.querySelector('.sdStructResult');res.classList.remove('hidden');res.innerHTML='<div class="price-box"><div style="color:var(--accent-purple);font-weight:700">✅ تم إرسال الطلب بنجاح</div></div>';sdLoad(level);e.target.reset()
+  }catch(e){alert('خطأ: '+(e.data?.error||e.message))}finally{btn.disabled=false;btn.textContent='إرسال الطلب'}
+}
+async function sdAccept(id){if(!confirm('تأكيد قبول العرض؟'))return;try{await api('PUT','/offers/'+id+'/accept/');alert('تم قبول العرض!');sdLoad(sdActiveLevel)}catch(e){alert('خطأ: '+(e.data?.error||e.message))}}
+async function sdOpenTutor(id){
+  try{const t=await api('GET','/users/tutors/'+id+'/');
+  document.getElementById('tutorModalContent').innerHTML=`<div style="text-align:center;margin-bottom:16px"><img src="${t.profile_picture_url||''}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:8px" onerror="this.style.display='none'"><h3>${t.first_name||''} ${t.last_name||''}</h3><span class="badge badge-matched">${LEVEL_MAP[t.teaching_level]||t.teaching_level||''}</span></div>${t.bio?'<p style="color:var(--text-gray);font-size:.9rem;text-align:center;margin-bottom:16px">'+t.bio+'</p>':''}<div style="display:grid;gap:8px"><div><strong>التخصص:</strong> ${t.specialization||'—'}</div><div><strong>سنوات الخبرة:</strong> ${t.years_experience||'—'}</div><div><strong>المؤهل:</strong> ${t.education||'—'}</div><div><strong>الشهادات:</strong> ${t.certificates||'—'}</div>${t.languages?.length?'<div><strong>اللغات:</strong> '+t.languages.map(l=>LANG_MAP[l]||l).join('، ')+'</div>':''}</div><button class="btn btn-primary" onclick="closeModal('tutorModal')" style="width:100%;margin-top:16px">إغلاق</button>`;
+  document.getElementById('tutorModal').classList.add('active')
+  }catch{alert('خطأ في تحميل البيانات')}
+}
+
+// ==================== TUTOR DASHBOARD ====================
+let tdCurrentFileId=null,tdCurrentSessionId=null,tdPing=null,tdLevel='',tdInterval=null;
+function initTD(){
+  const u=getUser();tdLevel=u.teaching_level||'quran';
+  document.getElementById('tdUserName').textContent=u.first_name||u.username;
+  document.getElementById('tdLevel').textContent='مختص في: '+(LEVEL_MAP[tdLevel]||tdLevel);
+  document.getElementById('tdTabs').innerHTML=`<span class="tab active"><i class="fas ${LEVEL_ICONS[tdLevel]||'fa-book'}"></i> ${LEVEL_MAP[tdLevel]||tdLevel}</span>`;
+  document.getElementById('tdContent').innerHTML=tdBuild(tdLevel);tdLoad(tdLevel);
+  if(tdPing)clearInterval(tdPing);tdPing=setInterval(()=>{try{api('POST','/users/ping/')}catch(){}},30000);
+  if(tdInterval)clearInterval(tdInterval);tdInterval=setInterval(()=>tdLoad(tdLevel),15000);
+}
+function tdBuild(level){return`<h3>الملفات المتاحة — ${LEVEL_MAP[level]}</h3><div class="tdFiles"><p class="empty">جاري التحميل...</p></div><h3 style="margin-top:20px">عروضي المرسلة</h3><div class="tdOffers"><p class="empty">لم ترسل أي عروض</p></div><h3 style="margin-top:20px">جلساتي النشطة</h3><div class="tdSessions"><p class="empty">لا توجد جلسات نشطة</p></div>`}
+async function tdLoad(level){try{await Promise.all([tdLoadFiles(level),tdLoadOffers(level),tdLoadSessions(level)])}catch(){}}
+async function tdLoadFiles(level){
+  const el=document.querySelector('#tdContent .tdFiles');if(!el)return;
+  try{const r=await fetch(API_BASE+'/files/?level='+level,{headers:{'Authorization':'Bearer '+getToken()}});const f=await r.json()
+  if(!Array.isArray(f)||!f.length){el.innerHTML='<p class="empty">لا توجد ملفات متاحة</p>';return}
+  el.innerHTML=`<div class="table-wrap"><table><tr><th>#</th><th>التفاصيل</th><th>النوع</th><th>السعر الأساسي</th><th>إجراء</th></tr>${f.map(x=>`<tr><td>${x.id}</td><td>${x.specialization||x.subject_type||level}${x.difficulty?' · '+x.difficulty:''}</td><td>${x.session_type==='solo'?'فردي':'مجموعة'}</td><td>${x.base_price||'—'} ${x.currency||''}</td><td><button class="btn btn-sm btn-primary" onclick="tdOpenModal(${x.id},'${(x.specialization||level)}')">إرسال عرض</button></td></tr>`).join('')}</table></div>`
+  }catch{el.innerHTML='<p class="empty">خطأ في التحميل</p>'}
+}
+async function tdLoadOffers(level){
+  const el=document.querySelector('#tdContent .tdOffers');if(!el)return;
+  try{const r=await api('GET','/offers/');if(!Array.isArray(r)||!r.length){el.innerHTML='<p class="empty">لم ترسل أي عروض</p>';return}
+  el.innerHTML=`<div class="table-wrap"><table><tr><th>#</th><th>سعري</th><th>نوع الدفع</th><th>الحالة</th><th>التاريخ</th></tr>${r.map(o=>`<tr><td>${o.id}</td><td>${o.tutor_price||o.price}</td><td>${o.payment_type==='monthly'?'شهري':'بالحصة'}</td><td><span class="badge badge-${o.status}">${o.status}</span></td><td>${new Date(o.created_at).toLocaleDateString('ar')}</td></tr>`).join('')}</table></div>`
+  }catch{el.innerHTML='<p class="empty">خطأ في التحميل</p>'}
+}
+async function tdLoadSessions(level){
+  const el=document.querySelector('#tdContent .tdSessions');if(!el)return;
+  try{const r=await api('GET','/offers/');const ac=Array.isArray(r)?r.filter(o=>o.status==='accepted'):[]
+  if(!ac.length){el.innerHTML='<p class="empty">لا توجد جلسات نشطة</p>';return}
+  el.innerHTML=ac.map(o=>`<div class="session-card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><div><strong>💰 ${o.tutor_price} ${o.file?.currency||''} · ${o.payment_type==='monthly'?'شهري':'بالحصة'}</strong>${o.file?.current_juz?'<div style="color:var(--text-muted);font-size:.82rem">الجزء '+o.file.current_juz+' ← '+o.file.start_juz+'</div>':''}</div><button class="btn btn-sm btn-success" onclick="tdOpenProgress(${o.id})">تسجيل تقدم</button></div><div id="tdSessProg-${o.id}" style="margin-top:8px"></div></div>`).join('')
+  ac.forEach(o=>tdLoadSessProg(o.id))
+  }catch{el.innerHTML='<p class="empty">خطأ في التحميل</p>'}
+}
+async function tdLoadSessProg(sid){
+  const c=document.getElementById('tdSessProg-'+sid);if(!c)return;
+  try{const r=await api('GET','/offers/progress/?session_id='+sid);if(!Array.isArray(r)||!r.length){c.innerHTML='<p style="color:var(--text-muted);font-size:.82rem">لا يوجد تقدم مسجل بعد</p>';return}
+  c.innerHTML=r.map(e=>{const ft=e.juz_from?`الجزء ${e.juz_from} ← ${e.juz_to}`:e.unit_from?`${e.unit_from} ← ${e.unit_to}`:e.cefr_from?`${e.cefr_from} ← ${e.cefr_to}`:'—'
+  return `<div class="progress-row"><strong>${ft}</strong> <span style="color:var(--text-muted);font-size:.8rem">${new Date(e.created_at).toLocaleDateString('ar')}</span>${e.tutor_notes?'<div>📝 '+e.tutor_notes+'</div>':''}</div>`}).join('')
+  }catch(){}
+}
+function tdOpenModal(fid,info){tdCurrentFileId=fid;document.getElementById('modalFileInfo').textContent=info;document.getElementById('modalPrice').value='';document.getElementById('modalPaymentType').value='per_session';document.getElementById('modalError').style.display='none';document.getElementById('offerModal').classList.add('active')}
+async function submitOffer(){
+  const p=document.getElementById('modalPrice').value,pt=document.getElementById('modalPaymentType').value;
+  if(!p||p<=0){document.getElementById('modalError').textContent='أدخل سعراً صحيحاً';document.getElementById('modalError').style.display='block';return}
+  try{await api('POST','/offers/create/',{file_id:tdCurrentFileId,tutor_price:p,payment_type:pt});alert('تم إرسال العرض');closeModal('offerModal');tdLoad(tdLevel)}
+  catch(e){document.getElementById('modalError').textContent=e.data?.error||e.message;document.getElementById('modalError').style.display='block'}
+}
+function tdOpenProgress(sid){
+  tdCurrentSessionId=sid;document.getElementById('progressSessionInfo').textContent='تسجيل تقدم الجلسة رقم '+sid;
+  document.getElementById('progressTutorNotes').value='';document.getElementById('progressError').style.display='none';
+  let html='';
+  if(tdLevel==='quran')html=`<div class="form-row"><div class="form-group"><label>من الجزء</label><input type="number" id="progFrom" min="1" max="30"></div><div class="form-group"><label>إلى الجزء</label><input type="number" id="progTo" min="1" max="30"></div></div>`
+  else if(tdLevel==='kindergarten')html=`<div class="form-row"><div class="form-group"><label>من الوحدة</label><input type="text" id="progFrom" placeholder="وحدة 3"></div><div class="form-group"><label>إلى الوحدة</label><input type="text" id="progTo" placeholder="وحدة 5"></div></div>`
+  else if(tdLevel==='languages')html=`<div class="form-row"><div class="form-group"><label>من مستوى CEFR</label><select id="progFrom"><option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option></select></div><div class="form-group"><label>إلى مستوى CEFR</label><select id="progTo"><option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option></select></div></div>`
+  else html='<p style="color:var(--text-muted)">هذا المستوى لا يتطلب تتبع تقدم رقمي</p>';
+  document.getElementById('progressFields').innerHTML=html;document.getElementById('progressModal').classList.add('active');
+}
+async function submitProgress(){
+  const tn=document.getElementById('progressTutorNotes').value,p={session_id:tdCurrentSessionId,tutor_notes:tn},
+    l=tdLevel;
+  if(l==='quran'||l==='kindergarten'||l==='languages'){p.progress_type=l;if(l==='quran'){p.juz_from=parseInt(document.getElementById('progFrom').value);p.juz_to=parseInt(document.getElementById('progTo').value)}else if(l==='kindergarten'){p.unit_from=document.getElementById('progFrom').value;p.unit_to=document.getElementById('progTo').value}else{p.cefr_from=document.getElementById('progFrom').value;p.cefr_to=document.getElementById('progTo').value}}
+  if(!p.juz_from&&!p.unit_from&&!p.cefr_from){if(l!=='university'&&l!=='high_school'&&l!=='middle_school'&&l!=='primary'){document.getElementById('progressError').textContent='يرجى تعبئة الحقول المطلوبة';document.getElementById('progressError').style.display='block';return}}
+  try{await api('POST','/offers/progress/create/',p);alert('تم تسجيل التقدم');closeModal('progressModal');tdLoad(tdLevel)}
+  catch(e){document.getElementById('progressError').textContent=e.data?.error||e.message;document.getElementById('progressError').style.display='block'}
+}
+
+// ==================== EDIT PROFILE ====================
+function initEdit(){
+  const role=getRole();
+  if(role==='student'){document.getElementById('edTutorOnly').style.display='none';document.getElementById('edStudentOnly').style.display='block';document.getElementById('edPaypalGroup').style.display='none'
+    const c=document.getElementById('edStudentLevels');if(!c.children.length)LEVELS_DATA.forEach(l=>{c.innerHTML+=`<label><input type="checkbox" name="student_levels" value="${l.code}"><span>${l.label}</span></label>`})
+  }else{const sl=document.getElementById('edTeachingLevel');if(!sl.children.length){LEVELS_DATA.forEach(l=>{sl.innerHTML+=`<option value="${l.code}">${l.label}</option>`})
+    LANG_DATA.forEach(l=>{document.getElementById('edLangs').innerHTML+=`<label><input type="checkbox" name="langs" value="${l.code}"><span>${l.label}</span></label>`})
+    sl.addEventListener('change',function(){document.getElementById('edLangGroup').style.display=this.value==='languages'?'block':'none'})}
+  }
+  loadProfile();
+}
+async function loadProfile(){
+  try{const u=await api('GET','/users/profile/');
+  document.getElementById('edFirstName').value=u.first_name||'';document.getElementById('edLastName').value=u.last_name||'';
+  document.getElementById('edEmail').value=u.email||'';document.getElementById('edSpecialization').value=u.specialization||'';
+  document.getElementById('edPaypal').value=u.paypal_email||'';
+  const role=getRole();
+  if(role==='tutor'){document.getElementById('edExperience').value=u.years_experience||'';document.getElementById('edEducation').value=u.education||'';document.getElementById('edCertificates').value=u.certificates||'';document.getElementById('edBio').value=u.bio||''
+    if(u.teaching_level)document.getElementById('edTeachingLevel').value=u.teaching_level;
+    document.getElementById('edLangGroup').style.display=u.teaching_level==='languages'?'block':'none';
+    if(u.languages)document.querySelectorAll('#edLangs input').forEach(cb=>{if(u.languages.includes(cb.value))cb.checked=true})
+  }else{if(u.student_levels)document.querySelectorAll('#edStudentLevels input').forEach(cb=>{if(u.student_levels.includes(cb.value))cb.checked=true})}
+  }catch(e){alert('خطأ في تحميل البيانات')}
+}
+document.getElementById('profileForm').addEventListener('submit',async e=>{
+  e.preventDefault();const btn=document.getElementById('edBtn'),err=document.getElementById('edError');
+  btn.disabled=true;btn.textContent='جاري الحفظ...';err.style.display='none';
+  const role=getRole();
+  const body={first_name:document.getElementById('edFirstName').value,last_name:document.getElementById('edLastName').value,email:document.getElementById('edEmail').value,specialization:document.getElementById('edSpecialization').value};
+  if(role==='tutor'){body.paypal_email=document.getElementById('edPaypal').value;body.years_experience=document.getElementById('edExperience').value||null;body.education=document.getElementById('edEducation').value;body.certificates=document.getElementById('edCertificates').value;body.bio=document.getElementById('edBio').value;body.teaching_level=document.getElementById('edTeachingLevel').value;body.languages=[...document.querySelectorAll('#edLangs input:checked')].map(c=>c.value)}
+  else body.student_levels=[...document.querySelectorAll('#edStudentLevels input:checked')].map(c=>c.value);
+  try{const d=await api('PUT','/users/profile/',body);setUserData(d);alert('تم حفظ التغييرات')}
+  catch(e){err.textContent=e.data?.error||e.message;err.style.display='block'}
+  finally{btn.disabled=false;btn.textContent='حفظ التغييرات'}
+});
+
+// ==================== HELPERS ====================
+function closeModal(id){document.getElementById(id).classList.remove('active')}
+
+// ==================== INIT ====================
+buildFooter();
+
+// Start with home page
+navigate('home');
+</script>
+</body>
+</html>
