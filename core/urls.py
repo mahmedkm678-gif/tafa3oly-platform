@@ -18,20 +18,20 @@ urlpatterns += [
     }),
 ]
 
-# Serve HTML pages with clean URLs
+from django.views.generic import RedirectView
+
+# Redirect root and clean URLs to their physical files under /frontend/
+# This ensures that relative paths for CSS/JS resolve correctly.
 PAGE_MAP = {
-    "": "index.html",
-    "login": "login.html",
-    "register": "register.html",
-    "student-dashboard": "student_dashboard.html",
-    "tutor-dashboard": "tutor_dashboard.html",
-    "edit-profile": "edit_profile.html",
-    "quran-request": "quran_request.html",
+    "": "/frontend/index.html",
+    "login": "/frontend/pages/login.html",
+    "register": "/frontend/pages/register.html",
+    "student-dashboard": "/frontend/pages/student_dashboard.html",
+    "tutor-dashboard": "/frontend/pages/tutor_dashboard.html",
+    "edit-profile": "/frontend/pages/edit_profile.html",
+    "quran-request": "/frontend/pages/quran_request.html",
 }
-for slug, filename in PAGE_MAP.items():
+for slug, redirect_url in PAGE_MAP.items():
     urlpatterns.append(
-        re_path(r"^" + slug + r"$", serve, {
-            "document_root": settings.BASE_DIR / "frontend",
-            "path": filename,
-        })
+        re_path(r"^" + slug + r"$", RedirectView.as_view(url=redirect_url, permanent=False))
     )
