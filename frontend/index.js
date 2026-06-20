@@ -56,12 +56,12 @@ function navigate(page){
   }
 
   const pageMap = {
-    'login': 'pages/login.html',
-    'register': 'pages/register.html',
-    'student-dashboard': 'pages/student_dashboard.html',
-    'tutor-dashboard': 'pages/tutor_dashboard.html',
-    'edit-profile': 'pages/edit_profile.html',
-    'quran-request': 'pages/quran_request.html'
+    'login': '/login',
+    'register': '/register',
+    'student-dashboard': '/student-dashboard',
+    'tutor-dashboard': '/tutor-dashboard',
+    'edit-profile': '/edit-profile',
+    'quran-request': '/quran-request'
   };
 
   if (pageMap[page]) {
