@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>لوحة الطالب - تفاعلي</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="../css/design-system.css">
+  <link rel="stylesheet" href="/frontend/css/design-system.css">
   <style>
     body { padding-bottom: 40px; }
     .hidden { display: none; }
@@ -34,9 +34,9 @@
     <div class="modal" id="tutorModalContent"></div>
   </div>
 
-  <script src="../js/shared.js"></script>
+  <script src="/frontend/js/shared.js"></script>
   <script>
-    if (!isLoggedIn() || !isStudent()) { window.location.href = 'login.html'; }
+    if (!isLoggedIn() || !isStudent()) { window.location.href = '/login'; }
 
     const user = getUser();
     document.getElementById('userDisplayName').textContent = user.first_name || user.username;

@@ -37,32 +37,32 @@ function buildNavbar() {
     let menuItems = "";
     if (!loggedIn) {
         menuItems = `
-            <li><a class="nav-link" href="../index.html">الرئيسية</a></li>
-            <li><a class="nav-link" href="login.html">تسجيل الدخول</a></li>
-            <li><a class="nav-link" href="register.html">إنشاء حساب</a></li>
+            <li><a class="nav-link" href="/">الرئيسية</a></li>
+            <li><a class="nav-link" href="/login">تسجيل الدخول</a></li>
+            <li><a class="nav-link" href="/register">إنشاء حساب</a></li>
         `;
     } else if (role === "student") {
         menuItems = `
-            <li><a class="nav-link" href="../index.html">الرئيسية</a></li>
-            <li><a class="nav-link" href="student_dashboard.html">لوحة التحكم</a></li>
-            <li><a class="nav-link" href="quran_request.html"><i class="fas fa-mosque"></i> تحفيظ قرآن</a></li>
-            <li><a class="nav-link" href="edit_profile.html">الملف الشخصي</a></li>
+            <li><a class="nav-link" href="/">الرئيسية</a></li>
+            <li><a class="nav-link" href="/student-dashboard">لوحة التحكم</a></li>
+            <li><a class="nav-link" href="/quran-request"><i class="fas fa-mosque"></i> تحفيظ قرآن</a></li>
+            <li><a class="nav-link" href="/edit-profile">الملف الشخصي</a></li>
         `;
     } else if (role === "tutor") {
         menuItems = `
-            <li><a class="nav-link" href="../index.html">الرئيسية</a></li>
-            <li><a class="nav-link" href="tutor_dashboard.html">لوحة التحكم</a></li>
-            <li><a class="nav-link" href="edit_profile.html">الملف الشخصي</a></li>
+            <li><a class="nav-link" href="/">الرئيسية</a></li>
+            <li><a class="nav-link" href="/tutor-dashboard">لوحة التحكم</a></li>
+            <li><a class="nav-link" href="/edit-profile">الملف الشخصي</a></li>
         `;
     }
     return `
     <header class="header">
       <div class="container nav-wrapper">
-        <a href="../index.html" class="logo"><span class="logo-cap"><i class="fas fa-graduation-cap"></i></span> تفاعلي</a>
+        <a href="/" class="logo"><span class="logo-cap"><i class="fas fa-graduation-cap"></i></span> تفاعلي</a>
         <button class="menu-toggle" onclick="this.nextElementSibling.classList.toggle('open')"><i class="fas fa-bars"></i></button>
         <ul class="nav-menu">${menuItems}</ul>
         <div class="nav-actions">
-          ${loggedIn ? `<div class="nav-user"><span>${user.first_name || user.username}</span><a href="edit_profile.html"><img src="${user.profile_picture_url || '../static/default-avatar.png'}" alt="" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid rgba(139,92,246,0.3)"></a><button class="btn btn-sm btn-ghost" onclick="handleLogout()">تسجيل خروج</button></div>` : `<a href="login.html" class="btn btn-sm btn-ghost">دخول</a><a href="register.html" class="btn btn-sm btn-primary">اشتراك</a>`}
+          ${loggedIn ? `<div class="nav-user"><span>${user.first_name || user.username}</span><a href="/edit-profile"><img src="${user.profile_picture_url || ''}" alt="" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid rgba(139,92,246,0.3)"></a><button class="btn btn-sm btn-ghost" onclick="handleLogout()">تسجيل خروج</button></div>` : `<a href="/login" class="btn btn-sm btn-ghost">دخول</a><a href="/register" class="btn btn-sm btn-primary">اشتراك</a>`}
         </div>
       </div>
     </header>
@@ -89,14 +89,14 @@ function buildFooter() {
             <h4 class="footer-nav-title">الخدمات</h4>
             <ul class="footer-nav-list">
               <li><a href="#" class="footer-nav-link">تحليل الملفات بالـ AI</a></li>
-              <li><a href="quran_request.html" class="footer-nav-link">تحفيظ القرآن الكريم</a></li>
+              <li><a href="/quran-request" class="footer-nav-link">تحفيظ القرآن الكريم</a></li>
               <li><a href="#" class="footer-nav-link">الشرح التفاعلي الذكي</a></li>
             </ul>
           </div>
           <div>
             <h4 class="footer-nav-title">روابط هامة</h4>
             <ul class="footer-nav-list">
-              <li><a href="../index.html" class="footer-nav-link">الرئيسية</a></li>
+              <li><a href="/" class="footer-nav-link">الرئيسية</a></li>
               <li><a href="#" class="footer-nav-link">الشروط والأحكام</a></li>
               <li><a href="#" class="footer-nav-link">سياسة الخصوصية</a></li>
             </ul>
@@ -124,7 +124,7 @@ function buildFooter() {
 
 function handleLogout() {
     clearAuth();
-    window.location.href = "../index.html";
+    window.location.href = "/";
 }
 
 const LEVEL_MAP = {
@@ -158,5 +158,5 @@ const DAYS = [
     { key: 'wed', label: 'الأربعاء' }, { key: 'thu', label: 'الخميس' },
     { key: 'fri', label: 'الجمعة' },
 ];
-function redirectIfAuth() { if (isLoggedIn()) { window.location.href = getRole() === 'tutor' ? 'tutor_dashboard.html' : 'student_dashboard.html'; } }
-function redirectIfGuest() { if (!isLoggedIn()) { window.location.href = 'login.html'; } }
+function redirectIfAuth() { if (isLoggedIn()) { window.location.href = getRole() === 'tutor' ? '/tutor-dashboard' : '/student-dashboard'; } }
+function redirectIfGuest() { if (!isLoggedIn()) { window.location.href = '/login'; } }

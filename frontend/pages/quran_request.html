@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>طلب تحفيظ قرآن - تفاعلي</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="../css/design-system.css">
+  <link rel="stylesheet" href="/frontend/css/design-system.css">
   <style>
     body { padding-bottom: 40px; }
     .quran-header { text-align: center; padding: 40px 0; }
@@ -82,16 +82,16 @@
     </div>
 
     <div style="text-align:center;margin-top:20px;">
-      <a href="student_dashboard.html" class="btn btn-secondary"><i class="fas fa-arrow-right"></i> العودة للوحة التحكم</a>
+      <a href="/student-dashboard" class="btn btn-secondary"><i class="fas fa-arrow-right"></i> العودة للوحة التحكم</a>
     </div>
   </div>
 
   <div id="footer"></div>
 
-  <script src="../js/shared.js"></script>
+  <script src="/frontend/js/shared.js"></script>
   <script>
     redirectIfGuest();
-    if (!isStudent()) { window.location.href = 'login.html'; }
+    if (!isStudent()) { window.location.href = '/login'; }
 
     const grid = document.getElementById('availabilityGrid');
     DAYS.forEach(d => {

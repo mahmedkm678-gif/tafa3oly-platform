@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>تسجيل دخول - تفاعلي</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="../css/design-system.css">
+  <link rel="stylesheet" href="/frontend/css/design-system.css">
   <style>
     body { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
     .login-card { width: 100%; max-width: 420px; }
@@ -20,7 +20,7 @@
   <div class="glow-ambient glow-purple"></div>
   <div class="glow-ambient glow-blue"></div>
   <div class="glass-card login-card" style="padding:28px;">
-    <a href="../index.html" class="logo"><span class="logo-cap"><i class="fas fa-graduation-cap"></i></span> تفاعلي</a>
+    <a href="/" class="logo"><span class="logo-cap"><i class="fas fa-graduation-cap"></i></span> تفاعلي</a>
     <h1>تسجيل دخول</h1>
     <p class="sub">أهلاً بعودتك! سجل دخولك للمتابعة</p>
 
@@ -40,11 +40,11 @@
     <div class="divider">أو</div>
 
     <div style="text-align:center;font-size:0.9rem;color:var(--text-muted);">
-      ما عندك حساب؟ <a href="register.html" style="color:var(--accent-purple);font-weight:600;">سجل الآن</a>
+      ما عندك حساب؟ <a href="/register" style="color:var(--accent-purple);font-weight:600;">سجل الآن</a>
     </div>
   </div>
 
-  <script src="../js/shared.js"></script>
+  <script src="/frontend/js/shared.js"></script>
   <script>
     redirectIfAuth();
 
@@ -62,7 +62,7 @@
         if (!res.ok) throw new Error(data.error || 'بيانات الدخول غير صحيحة');
         localStorage.setItem('access_token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
-        window.location.href = data.user.role === 'tutor' ? 'tutor_dashboard.html' : 'student_dashboard.html';
+        window.location.href = data.user.role === 'tutor' ? '/tutor-dashboard' : '/student-dashboard';
       } catch (e) { err.textContent = e.message; err.style.display = 'block'; }
       finally { btn.disabled = false; btn.textContent = 'دخول'; }
     });

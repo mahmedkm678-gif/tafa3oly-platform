@@ -9,29 +9,16 @@ urlpatterns = [
     path("api/files/", include("files.urls")),
     path("api/offers/", include("offers.urls")),
     path("api/payments/", include("payments.urls")),
-]
-
-# Serve frontend static files (CSS, JS, assets) under /frontend/
-urlpatterns += [
+    # Serve frontend files under /frontend/
     re_path(r"^frontend/(?P<path>.*)$", serve, {
         "document_root": settings.BASE_DIR / "frontend",
     }),
+    # Serve pages at clean URLs
+    re_path(r"^$", serve, {"document_root": settings.BASE_DIR / "frontend", "path": "index.html"}),
+    re_path(r"^login$", serve, {"document_root": settings.BASE_DIR / "frontend", "path": "pages/login.html"}),
+    re_path(r"^register$", serve, {"document_root": settings.BASE_DIR / "frontend", "path": "pages/register.html"}),
+    re_path(r"^student-dashboard$", serve, {"document_root": settings.BASE_DIR / "frontend", "path": "pages/student_dashboard.html"}),
+    re_path(r"^tutor-dashboard$", serve, {"document_root": settings.BASE_DIR / "frontend", "path": "pages/tutor_dashboard.html"}),
+    re_path(r"^edit-profile$", serve, {"document_root": settings.BASE_DIR / "frontend", "path": "pages/edit_profile.html"}),
+    re_path(r"^quran-request$", serve, {"document_root": settings.BASE_DIR / "frontend", "path": "pages/quran_request.html"}),
 ]
-
-from django.views.generic import RedirectView
-
-# Redirect root and clean URLs to their physical files under /frontend/
-# This ensures that relative paths for CSS/JS resolve correctly.
-PAGE_MAP = {
-    "": "/frontend/index.html",
-    "login": "/frontend/pages/login.html",
-    "register": "/frontend/pages/register.html",
-    "student-dashboard": "/frontend/pages/student_dashboard.html",
-    "tutor-dashboard": "/frontend/pages/tutor_dashboard.html",
-    "edit-profile": "/frontend/pages/edit_profile.html",
-    "quran-request": "/frontend/pages/quran_request.html",
-}
-for slug, redirect_url in PAGE_MAP.items():
-    urlpatterns.append(
-        re_path(r"^" + slug + r"$", RedirectView.as_view(url=redirect_url, permanent=False))
-    )
