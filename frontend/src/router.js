@@ -18,6 +18,11 @@ export class Router {
     this.routes = routes
     this.notFound = notFound
     this.currentPage = ''
+    this._wrap = document.getElementById('page-wrap')
+    this._wrap.addEventListener('click', e => {
+      const btn = e.target.closest('.page-btn, .page-link')
+      if (btn) this.navigate(btn.dataset.page)
+    })
   }
 
   navigate(page) {
@@ -56,28 +61,23 @@ export class Router {
 
     const route = this.routes[page]
     if (route) {
-      const wrap = document.getElementById('page-wrap')
-      wrap.style.opacity = '0'
-      wrap.style.transition = 'opacity 0.2s ease'
+      this._wrap.style.opacity = '0'
+      this._wrap.style.transition = 'opacity 0.2s ease'
 
       setTimeout(() => {
         try {
-          wrap.innerHTML = route.render(this.navigate.bind(this))
-          wrap.querySelectorAll('.page-btn, .page-link').forEach(el => {
-            el.addEventListener('click', () => this.navigate(el.dataset.page))
-          })
+          this._wrap.innerHTML = route.render(this.navigate.bind(this))
         } catch (e) {
           console.error('Render error:', e)
-          wrap.innerHTML = `
+          this._wrap.innerHTML = `
             <div class="page active" style="text-align:center;padding:100px 24px">
               <i class="fas fa-exclamation-triangle" style="font-size:3rem;color:var(--accent-purple);margin-bottom:16px"></i>
               <h2>عذراً، حدث خطأ في تحميل الصفحة</h2>
               <p style="color:var(--text-muted);margin:12px 0 24px">يرجى المحاولة مرة أخرى</p>
               <button class="btn btn-primary page-btn" data-page="home">العودة للرئيسية</button>
             </div>`
-          wrap.querySelector('.page-btn')?.addEventListener('click', () => this.navigate('home'))
         }
-        wrap.style.opacity = '1'
+        this._wrap.style.opacity = '1'
       }, 150)
     }
 
