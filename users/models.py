@@ -9,7 +9,7 @@ EDUCATION_LEVELS = (
     ('middle_school', 'إعدادي'),
     ('primary', 'ابتدائي'),
     ('kindergarten', 'حضانة'),
-    ('language', 'لغات'),
+    ('languages', 'لغات'),
 )
 
 
@@ -35,3 +35,17 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.get_full_name() or self.username} ({self.role})"
+
+
+class ContactRequest(models.Model):
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    email = models.EmailField()
+    company_name = models.CharField(max_length=255, blank=True, default="")
+    employee_count = models.PositiveIntegerField(null=True, blank=True)
+    question = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Contact request from {self.first_name} {self.last_name} ({self.email})"
+

@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://tafa3oly.com/sitemap.xml

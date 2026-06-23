@@ -9,4 +9,5 @@ urlpatterns = [
     path("available-tutors/", views.available_tutors, name="available-tutors"),
     path("ping/", views.ping, name="ping"),
     path("tutors/<int:pk>/", views.tutor_detail, name="tutor-detail"),
+    path("contact/", views.submit_contact_request, name="contact-submit"),
 ]

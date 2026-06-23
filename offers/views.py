@@ -125,7 +125,7 @@ def create_progress(request):
     elif progress_type == "kindergarten":
         if not request.data.get("unit_from") or not request.data.get("unit_to"):
             return Response({"error": "unit_from and unit_to required for Kindergarten"}, status=status.HTTP_400_BAD_REQUEST)
-    elif progress_type == "language":
+    elif progress_type == "languages":
         if not request.data.get("cefr_from") or not request.data.get("cefr_to"):
             return Response({"error": "cefr_from and cefr_to required for Language"}, status=status.HTTP_400_BAD_REQUEST)
 

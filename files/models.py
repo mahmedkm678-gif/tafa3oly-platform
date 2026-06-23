@@ -9,7 +9,7 @@ class EducationLevel(models.TextChoices):
     MIDDLE_SCHOOL = 'middle_school', 'إعدادي'
     PRIMARY = 'primary', 'ابتدائي'
     KINDERGARTEN = 'kindergarten', 'حضانة'
-    LANGUAGE = 'language', 'لغات'
+    LANGUAGES = 'languages', 'لغات'
 
 
 class Language(models.TextChoices):

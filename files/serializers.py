@@ -11,7 +11,7 @@ class FileUploadSerializer(serializers.Serializer):
 
 
 class StructuredRequestSerializer(serializers.Serializer):
-    education_level = serializers.ChoiceField(choices=["quran", "kindergarten", "language"])
+    education_level = serializers.ChoiceField(choices=["quran", "kindergarten", "languages"])
     current_juz = serializers.IntegerField(min_value=1, max_value=30, required=False)
     start_juz = serializers.IntegerField(min_value=1, max_value=30, required=False)
     current_unit = serializers.IntegerField(min_value=1, required=False)

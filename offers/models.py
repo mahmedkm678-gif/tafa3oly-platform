@@ -43,7 +43,7 @@ class MemorizationProgress(models.Model):
     class ProgressType(models.TextChoices):
         QURAN = 'quran', 'القرآن الكريم'
         KINDERGARTEN = 'kindergarten', 'حضانة'
-        LANGUAGE = 'language', 'لغات'
+        LANGUAGES = 'languages', 'لغات'
 
     session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name='progress')
     progress_type = models.CharField(max_length=15, choices=ProgressType.choices, default=ProgressType.QURAN)
@@ -63,6 +63,6 @@ class MemorizationProgress(models.Model):
             parts.append(f"juz {self.juz_from}->{self.juz_to}")
         elif self.progress_type == 'kindergarten' and self.unit_from:
             parts.append(f"unit {self.unit_from}->{self.unit_to}")
-        elif self.progress_type == 'language' and self.cefr_from:
+        elif self.progress_type == 'languages' and self.cefr_from:
             parts.append(f"{self.cefr_from}->{self.cefr_to}")
         return ' ('.join(parts) + ')'

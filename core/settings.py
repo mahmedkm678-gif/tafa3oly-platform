@@ -151,7 +151,7 @@ PRICING = {
         "middle_school": {"solo": 20, "group": 14, "currency": "SAR"},
         "primary": {"solo": 15, "group": 10, "currency": "SAR"},
         "kindergarten": {"solo": 12, "group": 8, "currency": "SAR"},
-        "language": {"solo": 25, "group": 17, "currency": "SAR"},
+        "languages": {"solo": 25, "group": 17, "currency": "SAR"},
     },
     "KW": {
         "quran": {"solo": 1.7, "group": 1.2, "currency": "KWD"},
@@ -160,7 +160,7 @@ PRICING = {
         "middle_school": {"solo": 1.7, "group": 1.2, "currency": "KWD"},
         "primary": {"solo": 1.2, "group": 0.8, "currency": "KWD"},
         "kindergarten": {"solo": 1.0, "group": 0.7, "currency": "KWD"},
-        "language": {"solo": 2.0, "group": 1.4, "currency": "KWD"},
+        "languages": {"solo": 2.0, "group": 1.4, "currency": "KWD"},
     },
     "AE": {
         "quran": {"solo": 20, "group": 14, "currency": "AED"},
@@ -169,7 +169,7 @@ PRICING = {
         "middle_school": {"solo": 20, "group": 14, "currency": "AED"},
         "primary": {"solo": 15, "group": 10, "currency": "AED"},
         "kindergarten": {"solo": 12, "group": 8, "currency": "AED"},
-        "language": {"solo": 25, "group": 17, "currency": "AED"},
+        "languages": {"solo": 25, "group": 17, "currency": "AED"},
     },
     "QA": {
         "quran": {"solo": 20, "group": 14, "currency": "QAR"},
@@ -178,7 +178,7 @@ PRICING = {
         "middle_school": {"solo": 20, "group": 14, "currency": "QAR"},
         "primary": {"solo": 15, "group": 10, "currency": "QAR"},
         "kindergarten": {"solo": 12, "group": 8, "currency": "QAR"},
-        "language": {"solo": 25, "group": 17, "currency": "QAR"},
+        "languages": {"solo": 25, "group": 17, "currency": "QAR"},
     },
 }
 

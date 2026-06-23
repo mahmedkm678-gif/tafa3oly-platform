@@ -112,3 +112,51 @@ def ping(request):
     request.user.is_available = True
     request.user.save(update_fields=["last_seen", "is_available"])
     return Response({"status": "ok", "last_seen": now.isoformat()})
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def submit_contact_request(request):
+    from .models import ContactRequest
+    data = request.data
+    first_name = data.get("first_name")
+    last_name = data.get("last_name")
+    email = data.get("email")
+    company_name = data.get("company_name", "")
+    employee_count = data.get("employee_count")
+    question = data.get("question", "")
+
+    if not first_name or not last_name or not email:
+        return Response(
+            {"error": "First name, last name, and email are required fields."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        if employee_count:
+            employee_count = int(employee_count)
+        else:
+            employee_count = None
+    except ValueError:
+        return Response(
+            {"error": "Employee count must be an integer."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    contact_req = ContactRequest.objects.create(
+        first_name=first_name,
+        last_name=last_name,
+        email=email,
+        company_name=company_name,
+        employee_count=employee_count,
+        question=question,
+    )
+
+    return Response(
+        {
+            "message": "Contact request submitted successfully.",
+            "id": contact_req.id,
+        },
+        status=status.HTTP_201_CREATED,
+    )
+

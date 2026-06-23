@@ -9,16 +9,20 @@ urlpatterns = [
     path("api/files/", include("files.urls")),
     path("api/offers/", include("offers.urls")),
     path("api/payments/", include("payments.urls")),
-    # Serve frontend files under /frontend/
+    # Serve built SPA assets
+    re_path(r"^assets/(?P<path>.*)$", serve, {
+        "document_root": settings.BASE_DIR / "frontend" / "dist" / "assets",
+    }),
+    # Serve root-level static files from dist
+    re_path(r"^(favicon\.svg|hero\.png|robots\.txt|sitemap\.xml)$", serve, {
+        "document_root": settings.BASE_DIR / "frontend" / "dist",
+    }),
+    # Backward compat: serve frontend source files under /frontend/
     re_path(r"^frontend/(?P<path>.*)$", serve, {
         "document_root": settings.BASE_DIR / "frontend",
     }),
-    # Serve pages at clean URLs
-    re_path(r"^$", serve, {"document_root": settings.BASE_DIR / "frontend", "path": "index.html"}),
-    re_path(r"^login$", serve, {"document_root": settings.BASE_DIR / "frontend", "path": "pages/login.html"}),
-    re_path(r"^register$", serve, {"document_root": settings.BASE_DIR / "frontend", "path": "pages/register.html"}),
-    re_path(r"^student-dashboard$", serve, {"document_root": settings.BASE_DIR / "frontend", "path": "pages/student_dashboard.html"}),
-    re_path(r"^tutor-dashboard$", serve, {"document_root": settings.BASE_DIR / "frontend", "path": "pages/tutor_dashboard.html"}),
-    re_path(r"^edit-profile$", serve, {"document_root": settings.BASE_DIR / "frontend", "path": "pages/edit_profile.html"}),
-    re_path(r"^quran-request$", serve, {"document_root": settings.BASE_DIR / "frontend", "path": "pages/quran_request.html"}),
+    # Catch-all: serve SPA index.html for all other routes (client-side routing)
+    re_path(r"^.*$", serve, {
+        "document_root": settings.BASE_DIR / "frontend" / "dist", "path": "index.html",
+    }),
 ]

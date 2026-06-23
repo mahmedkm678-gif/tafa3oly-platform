@@ -100,7 +100,7 @@ def structured_request(request):
         kwargs["current_unit"] = data["current_unit"]
         kwargs["start_unit"] = data["start_unit"]
         kwargs["specialization"] = "رياض الأطفال"
-    elif level == "language":
+    elif level == "languages":
         kwargs["current_cefr"] = data.get("current_cefr", "A1")
         kwargs["start_cefr"] = data.get("start_cefr", "A1")
         kwargs["language"] = data.get("language", "english")
