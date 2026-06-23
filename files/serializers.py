@@ -12,8 +12,9 @@ class FileUploadSerializer(serializers.Serializer):
 
 class StructuredRequestSerializer(serializers.Serializer):
     education_level = serializers.ChoiceField(choices=["quran", "kindergarten", "languages"])
-    current_juz = serializers.IntegerField(min_value=1, max_value=30, required=False)
+    current_juz = serializers.IntegerField(min_value=0, max_value=30, required=False)
     start_juz = serializers.IntegerField(min_value=1, max_value=30, required=False)
+    end_juz = serializers.IntegerField(min_value=1, max_value=30, required=False)
     current_unit = serializers.IntegerField(min_value=1, required=False)
     start_unit = serializers.IntegerField(min_value=1, required=False)
     current_cefr = serializers.ChoiceField(choices=["A1", "A2", "B1", "B2", "C1", "C2"], required=False)
@@ -21,6 +22,9 @@ class StructuredRequestSerializer(serializers.Serializer):
     language = serializers.ChoiceField(choices=Language.values, required=False)
     session_type = serializers.ChoiceField(choices=["solo", "group"])
     max_students = serializers.IntegerField(default=1, min_value=1, max_value=10)
+    sessions_per_week = serializers.IntegerField(default=1, min_value=1, max_value=7)
+    session_duration = serializers.IntegerField(default=45, min_value=15, max_value=180)
+    start_date = serializers.DateField(required=False)
     weekly_availability = serializers.JSONField()
     country = serializers.ChoiceField(choices=["SA", "KW", "AE", "QA"])
     notes = serializers.CharField(required=False, allow_blank=True)
@@ -33,8 +37,9 @@ class FileSerializer(serializers.ModelSerializer):
             "id", "student", "file_url", "specialization", "difficulty",
             "estimated_hours", "subject_type", "education_level", "language",
             "base_price", "currency", "session_type", "max_students", "status",
-            "current_juz", "start_juz", "current_unit", "start_unit",
+            "current_juz", "start_juz", "end_juz", "current_unit", "start_unit",
             "current_cefr", "start_cefr",
+            "sessions_per_week", "session_duration", "start_date",
             "weekly_availability", "quran_notes", "created_at",
         ]
         read_only_fields = fields

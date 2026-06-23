@@ -88,13 +88,17 @@ def structured_request(request):
         "currency": currency,
         "session_type": data["session_type"],
         "max_students": data.get("max_students", 1),
+        "sessions_per_week": data.get("sessions_per_week", 1),
+        "session_duration": data.get("session_duration", 45),
+        "start_date": data.get("start_date"),
         "weekly_availability": data["weekly_availability"],
         "quran_notes": data.get("notes", ""),
     }
 
     if level == "quran":
-        kwargs["current_juz"] = data["current_juz"]
-        kwargs["start_juz"] = data["start_juz"]
+        kwargs["current_juz"] = data.get("current_juz")
+        kwargs["start_juz"] = data.get("start_juz")
+        kwargs["end_juz"] = data.get("end_juz")
         kwargs["specialization"] = "تحفيظ القرآن الكريم"
     elif level == "kindergarten":
         kwargs["current_unit"] = data["current_unit"]
