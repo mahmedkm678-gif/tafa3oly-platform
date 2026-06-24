@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <script type="module" src="/@vite/client"></script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تفاعلي — منصة التعليم الذكية: اربط بالطلاب والمدرسين في العالم العربي</title>
+  <meta name="description" content="تفاعلي منصة تعليمية ذكية تربط طلاب الجامعات والمدارس بمدرسين متخصصين. تحليل بالذكاء الاصطناعي، متابعة تقدم، ودفع آمن عبر PayPal." />
+  <meta name="keywords" content="تعليم, منصة تعليمية, مدرسين, طلاب, ذكاء اصطناعي, تحفيظ قرآن, جامعات, خليج" />
+  <meta name="robots" content="index, follow" />
+  <meta property="og:title" content="تفاعلي — منصة التعليم الذكية" />
+  <meta property="og:description" content="ارفع ملفك الأكاديمي، دع الذكاء الاصطناعي يحلله، وابدأ التعلم مع أفضل المدرسين." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://tafa3oly.com" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="apple-touch-icon" href="/favicon.svg" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+</head>
+<body>
+  <div class="glow-ambient glow-purple"></div>
+  <div class="glow-ambient glow-blue"></div>
+  <div id="app"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
