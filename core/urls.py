@@ -9,6 +9,7 @@ urlpatterns = [
     path("api/files/", include("files.urls")),
     path("api/offers/", include("offers.urls")),
     path("api/payments/", include("payments.urls")),
+    path("api/pricing/", views.pricing_view, name="pricing"),
     # Serve built SPA assets
     re_path(r"^assets/(?P<path>.*)$", serve, {
         "document_root": settings.BASE_DIR / "frontend" / "dist" / "assets",

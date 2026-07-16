@@ -1,3 +1,8 @@
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /static/
+Disallow: /media/
+
 Sitemap: https://tafa3oly.com/sitemap.xml

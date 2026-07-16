@@ -184,6 +184,24 @@ PRICING = {
         "kindergarten": {"solo": 12, "group": 8, "currency": "QAR"},
         "languages": {"solo": 25, "group": 17, "currency": "QAR"},
     },
+    "BH": {
+        "quran": {"solo": 2.0, "group": 1.4, "currency": "BHD"},
+        "university": {"solo": 3.0, "group": 2.0, "currency": "BHD"},
+        "high_school": {"solo": 2.5, "group": 1.7, "currency": "BHD"},
+        "middle_school": {"solo": 2.0, "group": 1.4, "currency": "BHD"},
+        "primary": {"solo": 1.5, "group": 1.0, "currency": "BHD"},
+        "kindergarten": {"solo": 1.2, "group": 0.8, "currency": "BHD"},
+        "languages": {"solo": 2.5, "group": 1.7, "currency": "BHD"},
+    },
+    "OM": {
+        "quran": {"solo": 2.0, "group": 1.4, "currency": "OMR"},
+        "university": {"solo": 3.0, "group": 2.0, "currency": "OMR"},
+        "high_school": {"solo": 2.5, "group": 1.7, "currency": "OMR"},
+        "middle_school": {"solo": 2.0, "group": 1.4, "currency": "OMR"},
+        "primary": {"solo": 1.5, "group": 1.0, "currency": "OMR"},
+        "kindergarten": {"solo": 1.2, "group": 0.8, "currency": "OMR"},
+        "languages": {"solo": 2.5, "group": 1.7, "currency": "OMR"},
+    },
 }
 
 MAX_GROUP_SIZE = 10

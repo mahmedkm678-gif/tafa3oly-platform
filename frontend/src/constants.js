@@ -29,3 +29,15 @@ export const DAYS = [
 ]
 
 export const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+
+export const COUNTRY_DATA = [
+  { code: 'SA', label: 'السعودية', currency: 'SAR', symbol: 'ر.س' },
+  { code: 'KW', label: 'الكويت', currency: 'KWD', symbol: 'د.ك' },
+  { code: 'AE', label: 'الإمارات', currency: 'AED', symbol: 'د.إ' },
+  { code: 'QA', label: 'قطر', currency: 'QAR', symbol: 'ر.ق' },
+  { code: 'BH', label: 'البحرين', currency: 'BHD', symbol: 'د.ب' },
+  { code: 'OM', label: 'عُمان', currency: 'OMR', symbol: 'ر.ع' },
+]
+
+export const COUNTRY_MAP = Object.fromEntries(COUNTRY_DATA.map(c => [c.code, c]))
+

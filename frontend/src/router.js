@@ -13,6 +13,41 @@ const PAGE_TITLES = {
   '404': 'الصفحة غير موجودة — تفاعلي',
 }
 
+const PAGE_METAS = {
+  'home': {
+    description: 'تفاعلي منصة تعليمية ذكية تربط طلاب الجامعات والمدارس بمدرسين متخصصين. تحليل بالذكاء الاصطناعي، متابعة تقدم، ودفع آمن عبر PayPal.',
+    canonical: 'https://tafa3oly.com/',
+  },
+  'login': {
+    description: 'سجّل دخولك على منصة تفاعلي للوصول إلى لوحة التحكم والمتابعة مع مدرسيك المتخصصين.',
+    canonical: 'https://tafa3oly.com/login',
+  },
+  'register': {
+    description: 'أنشئ حسابك المجاني على تفاعلي وابدأ رحلة التعلم مع أفضل المدرسين في العالم العربي.',
+    canonical: 'https://tafa3oly.com/register',
+  },
+  'quran-request': {
+    description: 'قدّم طلب تحفيظ القرآن الكريم مع مدرسين متخصصين معتمدين في التجويد والترتيل.',
+    canonical: 'https://tafa3oly.com/quran-request',
+  },
+  'student-dashboard': {
+    description: 'لوحة تحكم الطالب — تابع جلساتك وتقدمك التعليمي ومدرسيك على منصة تفاعلي.',
+    canonical: 'https://tafa3oly.com/student-dashboard',
+  },
+  'tutor-dashboard': {
+    description: 'لوحة تحكم المدرس — تابع طلبات الطلاب وعروض أسعارك وجلساتك على منصة تفاعلي.',
+    canonical: 'https://tafa3oly.com/tutor-dashboard',
+  },
+  'edit-profile': {
+    description: 'عدّل ملفك الشخصي على منصة تفاعلي — تحديث البيانات والتخصصات والمستوى التعليمي.',
+    canonical: 'https://tafa3oly.com/edit-profile',
+  },
+  '404': {
+    description: 'الصفحة التي تبحث عنها غير موجودة. عُد إلى الصفحة الرئيسية لمنصة تفاعلي.',
+    canonical: 'https://tafa3oly.com/',
+  },
+}
+
 export class Router {
   constructor(routes, notFound) {
     this.routes = routes
@@ -83,6 +118,13 @@ export class Router {
 
     window.scrollTo(0, 0)
     document.title = PAGE_TITLES[page] || PAGE_TITLES['home']
+
+    const meta = PAGE_METAS[page] || PAGE_METAS['home']
+    let descEl = document.querySelector('meta[name="description"]')
+    if (descEl) descEl.setAttribute('content', meta.description)
+    let canonicalEl = document.querySelector('link[rel="canonical"]')
+    if (canonicalEl) canonicalEl.setAttribute('href', meta.canonical)
+
     buildNavbar(this.navigate.bind(this))
     buildFooter(this.navigate.bind(this))
 

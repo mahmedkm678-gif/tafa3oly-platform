@@ -441,3 +441,9 @@ td { padding: 10px 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.03); col
 .avail-time:disabled { opacity: .35; }
 /* ===== Responsive Juz Grid ===== */
 @media (max-width: 480px) { .juz-grid { grid-template-columns: repeat(3, 1fr); } }
+/* ===== FAQ ===== */
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::marker { display: none; content: ''; }
+.faq-item[open] summary i { transform: rotate(180deg); }
+.faq-item summary { transition: var(--transition-smooth); }
+.faq-item summary:hover { background: rgba(255,255,255,0.02); }

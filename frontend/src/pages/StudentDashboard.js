@@ -87,7 +87,7 @@ function sdBuildStructured(level, cont) {
       <form id="sdStructForm-${level}">
         <input type="hidden" name="education_level" value="${level}">
         <div class="form-row">
-          <div class="form-group"><label>الدولة</label><select name="country" required><option value="SA">السعودية</option><option value="KW">الكويت</option><option value="AE">الإمارات</option><option value="QA">قطر</option></select></div>
+          <div class="form-group"><label>الدولة</label><select name="country" required><option value="SA">السعودية</option><option value="KW">الكويت</option><option value="AE">الإمارات</option><option value="QA">قطر</option><option value="BH">البحرين</option><option value="OM">عُمان</option></select></div>
           <div class="form-group"><label>نوع الجلسة</label><select name="session_type" onchange="this.closest('form').querySelector('.stdGroup').style.display=this.value==='group'?'block':'none'"><option value="solo">فردي</option><option value="group">مجموعة</option></select></div>
           <div class="form-group stdGroup" style="display:none"><label>عدد الطلاب</label><input type="number" name="students_count" value="2" min="2" max="10"></div>
         </div>
