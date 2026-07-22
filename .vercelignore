@@ -1,6 +1,4 @@
-# Ignore Django/backend files - frontend only
 manage.py
-requirements.txt
 Dockerfile
 railway.toml
 db.sqlite3
@@ -17,4 +15,3 @@ media/
 .env.example
 backup_old_frontend/
 PROJECT_MAP.md
-.git/

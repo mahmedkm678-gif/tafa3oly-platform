@@ -20,6 +20,18 @@ from .services import (
 logger = logging.getLogger(__name__)
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def list_payments(request):
+    qs = Payment.objects.select_related("session__request__file", "session__request__tutor")
+    if request.user.role == "student":
+        qs = qs.filter(session__request__file__student=request.user)
+    else:
+        qs = qs.filter(session__request__tutor=request.user)
+    qs = qs.order_by("-created_at")
+    return Response(PaymentSerializer(qs, many=True).data)
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def create_payment(request):

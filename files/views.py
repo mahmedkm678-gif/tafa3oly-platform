@@ -112,3 +112,55 @@ def structured_request(request):
 
     file_record = File.objects.create(**kwargs)
     return Response(FileSerializer(file_record).data, status=status.HTTP_201_CREATED)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def file_detail(request, pk):
+    try:
+        file_obj = File.objects.get(id=pk)
+    except File.DoesNotExist:
+        return Response({"error": "File not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.user.role == "tutor":
+        if file_obj.status != "pending" or file_obj.education_level != request.user.teaching_level:
+            return Response({"error": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+    elif file_obj.student != request.user:
+        return Response({"error": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+
+    return Response(FileSerializer(file_obj).data)
+
+
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+def update_file(request, pk):
+    try:
+        file_obj = File.objects.get(id=pk, student=request.user)
+    except File.DoesNotExist:
+        return Response({"error": "File not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    if file_obj.status != "pending":
+        return Response({"error": "Cannot edit a file that is already matched"}, status=status.HTTP_400_BAD_REQUEST)
+
+    allowed_fields = ["session_type", "max_students", "sessions_per_week", "session_duration", "start_date", "weekly_availability"]
+    for field in allowed_fields:
+        if field in request.data:
+            setattr(file_obj, field, request.data[field])
+    file_obj.save()
+
+    return Response(FileSerializer(file_obj).data)
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_file(request, pk):
+    try:
+        file_obj = File.objects.get(id=pk, student=request.user)
+    except File.DoesNotExist:
+        return Response({"error": "File not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    if file_obj.status != "pending":
+        return Response({"error": "Cannot delete a file that is already matched"}, status=status.HTTP_400_BAD_REQUEST)
+
+    file_obj.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)

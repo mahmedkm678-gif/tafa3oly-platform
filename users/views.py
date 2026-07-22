@@ -1,6 +1,10 @@
+import logging
 from datetime import timedelta
 from django.contrib.auth import authenticate
 from django.utils import timezone
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -8,6 +12,8 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from .serializers import RegisterSerializer, UserSerializer, TutorProfileSerializer
 from .services import upload_profile_picture
+
+logger = logging.getLogger(__name__)
 
 
 @api_view(["POST"])
@@ -49,6 +55,64 @@ def login(request):
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
     token, _ = Token.objects.get_or_create(user=user)
     return Response({"token": token.key, "user": UserSerializer(user).data})
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def request_password_reset(request):
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    email = request.data.get("email")
+    if not email:
+        return Response({"error": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = User.objects.get(email__iexact=email)
+    except User.DoesNotExist:
+        return Response({"message": "If the email exists, a reset link has been sent."})
+
+    token = default_token_generator.make_token(user)
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    reset_url = f"{request.build_absolute_uri('/').rstrip('/')}/reset-password/{uid}/{token}/"
+
+    logger.info(f"Password reset for {user.email}: {reset_url}")
+
+    return Response({"message": "If the email exists, a reset link has been sent.", "reset_url": reset_url})
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def confirm_password_reset(request):
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    uid = request.data.get("uid")
+    token = request.data.get("token")
+    new_password = request.data.get("new_password")
+
+    if not uid or not token or not new_password:
+        return Response({"error": "uid, token, and new_password are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user_pk = force_str(urlsafe_base64_decode(uid))
+        user = User.objects.get(pk=user_pk)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        return Response({"error": "Invalid reset link"}, status=status.HTTP_400_BAD_REQUEST)
+
+    if not default_token_generator.check_token(user, token):
+        return Response({"error": "Invalid or expired reset link"}, status=status.HTTP_400_BAD_REQUEST)
+
+    if len(new_password) < 8:
+        return Response({"error": "Password must be at least 8 characters"}, status=status.HTTP_400_BAD_REQUEST)
+
+    user.set_password(new_password)
+    user.save()
+
+    try:
+        user.auth_token.delete()
+    except Exception:
+        pass
+
+    return Response({"message": "Password reset successful. Please login with your new password."})
 
 
 @api_view(["GET", "PUT"])
@@ -112,6 +176,16 @@ def ping(request):
     request.user.is_available = True
     request.user.save(update_fields=["last_seen", "is_available"])
     return Response({"status": "ok", "last_seen": now.isoformat()})
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def logout(request):
+    try:
+        request.user.auth_token.delete()
+    except Exception:
+        pass
+    return Response({"message": "Logged out successfully"})
 
 
 @api_view(["POST"])

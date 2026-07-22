@@ -89,6 +89,23 @@ def accept_offer(request, pk):
     )
 
 
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+def reject_offer(request, pk):
+    try:
+        offer = Request.objects.get(id=pk, status="pending")
+    except Request.DoesNotExist:
+        return Response({"error": "Offer not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.user != offer.file.student:
+        return Response({"error": "Only the file owner can reject offers"}, status=status.HTTP_403_FORBIDDEN)
+
+    offer.status = "rejected"
+    offer.save()
+
+    return Response({"offer": RequestSerializer(offer).data})
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def list_progress(request):
