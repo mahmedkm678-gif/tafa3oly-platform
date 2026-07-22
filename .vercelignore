@@ -1,0 +1,20 @@
+# Ignore Django/backend files - frontend only
+manage.py
+requirements.txt
+Dockerfile
+railway.toml
+db.sqlite3
+*.py
+__pycache__/
+core/
+users/
+files/
+offers/
+payments/
+staticfiles/
+media/
+.env
+.env.example
+backup_old_frontend/
+PROJECT_MAP.md
+.git/
