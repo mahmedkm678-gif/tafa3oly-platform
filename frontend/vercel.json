@@ -1,13 +1,13 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install",
   "rewrites": [
     { "source": "/login", "destination": "/login/index.html" },
     { "source": "/register", "destination": "/register/index.html" },
     { "source": "/quran-request", "destination": "/quran-request/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite",
   "headers": [
     {
       "source": "/(.*)",
