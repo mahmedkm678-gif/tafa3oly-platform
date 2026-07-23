@@ -66,3 +66,18 @@ class MemorizationProgress(models.Model):
         elif self.progress_type == 'languages' and self.cefr_from:
             parts.append(f"{self.cefr_from}->{self.cefr_to}")
         return ' ('.join(parts) + ')'
+
+
+class Review(models.Model):
+    session = models.OneToOneField(Session, on_delete=models.CASCADE, related_name='review')
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_given')
+    tutor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_received')
+    rating = models.PositiveSmallIntegerField()
+    comment = models.TextField(blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('session', 'student')
+
+    def __str__(self):
+        return f"Review by {self.student_id} for Tutor #{self.tutor_id}: {self.rating}/5"

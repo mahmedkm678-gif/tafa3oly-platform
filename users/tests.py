@@ -4,6 +4,7 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 from .models import User, ContactRequest
 
+
 class ContactAPITests(APITestCase):
     def test_contact_request_submission(self):
         url = reverse("contact-submit")
@@ -37,10 +38,9 @@ class ContactAPITests(APITestCase):
 
 
 class AuthAPITests(APITestCase):
-    def test_registration_and_login_flow(self):
-        # 1. Register student
-        reg_url = reverse("register")
-        reg_data = {
+    def setUp(self):
+        self.reg_url = reverse("register")
+        self.reg_data = {
             "username": "student1",
             "email": "student1@example.com",
             "password": "strongpassword123",
@@ -49,7 +49,10 @@ class AuthAPITests(APITestCase):
             "role": "student",
             "student_levels": ["university"]
         }
-        response = self.client.post(reg_url, reg_data, format="json")
+
+    def test_registration_and_login_flow(self):
+        # 1. Register student
+        response = self.client.post(self.reg_url, self.reg_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn("token", response.data)
 
@@ -62,4 +65,64 @@ class AuthAPITests(APITestCase):
         response = self.client.post(login_url, login_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("token", response.data)
+
+    def test_login_with_email(self):
+        self.client.post(self.reg_url, self.reg_data, format="json")
+        login_url = reverse("login")
+        response = self.client.post(login_url, {
+            "email": "student1@example.com",
+            "password": "strongpassword123"
+        }, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_logout(self):
+        self.client.post(self.reg_url, self.reg_data, format="json")
+        login_url = reverse("login")
+        login_resp = self.client.post(login_url, {
+            "username": "student1",
+            "password": "strongpassword123"
+        }, format="json")
+        token = login_resp.data["token"]
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token}")
+
+        logout_url = reverse("logout")
+        response = self.client.post(logout_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Token should be invalid after logout
+        profile_url = reverse("profile")
+        response = self.client.get(profile_url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_password_reset_flow(self):
+        self.client.post(self.reg_url, self.reg_data, format="json")
+
+        # Request reset
+        request_url = reverse("password-reset-request")
+        response = self.client.post(request_url, {"email": "student1@example.com"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("reset_url", response.data)
+
+        # Extract uid and token from URL
+        reset_url = response.data["reset_url"]
+        parts = reset_url.rstrip("/").split("/")
+        uid = parts[-2]
+        token = parts[-1]
+
+        # Confirm reset
+        confirm_url = reverse("password-reset-confirm")
+        response = self.client.post(confirm_url, {
+            "uid": uid,
+            "token": token,
+            "new_password": "newpassword456"
+        }, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Login with new password
+        login_url = reverse("login")
+        response = self.client.post(login_url, {
+            "username": "student1",
+            "password": "newpassword456"
+        }, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 

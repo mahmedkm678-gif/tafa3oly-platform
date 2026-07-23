@@ -1,6 +1,6 @@
 # PROJECT_MAP — منصة تفاعلي (Tafa3oly)
 
-> آخر تحديث: 2026-06-17 (جميع Milestones 1-10 ✅)  
+> آخر تحديث: 2026-07-22 (جميع Milestones 1-11 ✅)
 > البيئة: Python 3.12.10 / Django 6.0.6 / DRF 3.17.1
 
 ---
@@ -143,8 +143,6 @@ PRICING = {
 - [ ] **PayPal webhook** — يحتاج PAYPAL_WEBHOOK_ID للتوقيع (بدونه يتخطى التحقق)
 - [ ] **Email notifications** — غير مطبقة
 - [ ] **WebSocket** للشات المباشر — غير مطبق (الدردشة مجرد وهم في الـ simulator)
-- [ ] **Testing** — لا توجد اختبارات آلية (`tests.py` فارغ)
-- [x] **الـ index.html الجديد** — تم تبنيه كصفحة رئيسية بالثيم الداكن (فيه 7 level cards, glassmorphism, خط Tajawal)
 - [ ] **ui design/ القديم** — مجلد `frontend/ui design/` يحتوي CSS/JS متقدم (Spline 3D, MathJax, simulator) ممكن دمجه لاحقاً
 
 ---
@@ -163,3 +161,4 @@ PRICING = {
 | 8 | Structured request: inline in student dashboard (Quran/KG/Lang) | ✅ |
 | 9 | Edit profile: dark theme + teaching_level/student_levels/languages | ✅ |
 | 10 | manage.py check ✅ + all 8 URLs serving 200 | ✅ |
+| 11 | Bug fix (core/urls.py) + Reject offers + File CRUD + Logout + Password reset + Reviews + Tests (33) + Privacy/Terms/FAQ pages | ✅ |

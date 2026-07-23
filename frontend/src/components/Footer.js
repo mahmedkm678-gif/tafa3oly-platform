@@ -32,9 +32,9 @@ export function buildFooter(navigate) {
           <div>
             <h4 class="footer-nav-title">الدعم</h4>
             <ul class="footer-nav-list">
-              <li><a class="footer-nav-link" href="#">الأسئلة الشائعة</a></li>
-              <li><a class="footer-nav-link" href="#">الشروط والأحكام</a></li>
-              <li><a class="footer-nav-link" href="#">سياسة الخصوصية</a></li>
+              <li><a class="footer-nav-link" data-page="faq">الأسئلة الشائعة</a></li>
+              <li><a class="footer-nav-link" data-page="terms">الشروط والأحكام</a></li>
+              <li><a class="footer-nav-link" data-page="privacy">سياسة الخصوصية</a></li>
               <li><a class="footer-nav-link" href="#">اتصل بنا</a></li>
             </ul>
           </div>

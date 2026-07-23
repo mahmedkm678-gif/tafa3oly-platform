@@ -8,4 +8,6 @@ urlpatterns = [
     path("<int:pk>/reject/", views.reject_offer, name="offer-reject"),
     path("progress/", views.list_progress, name="progress-list"),
     path("progress/create/", views.create_progress, name="progress-create"),
+    path("reviews/create/", views.create_review, name="review-create"),
+    path("reviews/<int:tutor_id>/", views.list_tutor_reviews, name="tutor-reviews"),
 ]

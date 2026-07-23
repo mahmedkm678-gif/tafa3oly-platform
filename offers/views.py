@@ -1,11 +1,12 @@
 from django.conf import settings
+from django.db import models
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from files.models import File
-from .models import Request, Session, MemorizationProgress
-from .serializers import RequestSerializer, RequestDetailSerializer, ProgressSerializer
+from .models import Request, Session, MemorizationProgress, Review
+from .serializers import RequestSerializer, RequestDetailSerializer, ProgressSerializer, ReviewSerializer
 
 
 @api_view(["GET"])
@@ -146,8 +147,59 @@ def create_progress(request):
         if not request.data.get("cefr_from") or not request.data.get("cefr_to"):
             return Response({"error": "cefr_from and cefr_to required for Language"}, status=status.HTTP_400_BAD_REQUEST)
 
-    serializer = ProgressSerializer(data=request.data)
+    progress_data = request.data.copy()
+    progress_data["session"] = session.id
+    serializer = ProgressSerializer(data=progress_data)
     serializer.is_valid(raise_exception=True)
 
-    progress = serializer.save(session_id=session_id)
+    progress = serializer.save()
     return Response(ProgressSerializer(progress).data, status=status.HTTP_201_CREATED)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def create_review(request):
+    if request.user.role != "student":
+        return Response({"error": "Only students can leave reviews"}, status=status.HTTP_403_FORBIDDEN)
+
+    session_id = request.data.get("session_id")
+    rating = request.data.get("rating")
+    comment = request.data.get("comment", "")
+
+    if not session_id or not rating:
+        return Response({"error": "session_id and rating are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    if not (1 <= int(rating) <= 5):
+        return Response({"error": "Rating must be between 1 and 5"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        session = Session.objects.select_related("request__file__student", "request__tutor").get(
+            id=session_id, request__file__student=request.user, status="done"
+        )
+    except Session.DoesNotExist:
+        return Response({"error": "Session not found or not completed"}, status=status.HTTP_404_NOT_FOUND)
+
+    if Review.objects.filter(session=session, student=request.user).exists():
+        return Response({"error": "You already reviewed this session"}, status=status.HTTP_400_BAD_REQUEST)
+
+    review = Review.objects.create(
+        session=session,
+        student=request.user,
+        tutor=session.request.tutor,
+        rating=rating,
+        comment=comment,
+    )
+
+    return Response(ReviewSerializer(review).data, status=status.HTTP_201_CREATED)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def list_tutor_reviews(request, tutor_id):
+    reviews = Review.objects.filter(tutor_id=tutor_id).select_related("student").order_by("-created_at")
+    avg = reviews.aggregate(avg_rating=models.Avg("rating"))
+    return Response({
+        "reviews": ReviewSerializer(reviews, many=True).data,
+        "average_rating": avg["avg_rating"],
+        "total_reviews": reviews.count(),
+    })

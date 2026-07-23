@@ -8,6 +8,9 @@ import { renderQuranRequest, initQuranRequest } from './pages/QuranRequest.js'
 import { renderStudentDashboard, initStudentDashboard, cleanupStudentDashboard } from './pages/StudentDashboard.js'
 import { renderTutorDashboard, initTutorDashboard, cleanupTutorDashboard } from './pages/TutorDashboard.js'
 import { renderEditProfile, initEditProfile } from './pages/EditProfile.js'
+import { renderPrivacy } from './pages/Privacy.js'
+import { renderTerms } from './pages/Terms.js'
+import { renderFAQ } from './pages/FAQ.js'
 import { renderNotFound } from './pages/NotFound.js'
 import { toast } from './components/Toast.js'
 
@@ -28,6 +31,9 @@ const routes = {
   'student-dashboard': { render: renderStudentDashboard, init: initStudentDashboard, cleanup: cleanupStudentDashboard },
   'tutor-dashboard': { render: renderTutorDashboard, init: initTutorDashboard, cleanup: cleanupTutorDashboard },
   'edit-profile': { render: renderEditProfile, init: initEditProfile },
+  'privacy': { render: renderPrivacy },
+  'terms': { render: renderTerms },
+  'faq': { render: renderFAQ },
   '404': { render: renderNotFound },
 }
 

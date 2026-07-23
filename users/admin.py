@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User
+from .models import User, ContactRequest
 
 
 @admin.register(User)
@@ -10,3 +10,9 @@ class CustomUserAdmin(UserAdmin):
     fieldsets = UserAdmin.fieldsets + (
         ('Profile', {'fields': ('role', 'specialization', 'paypal_email')}),
     )
+
+
+@admin.register(ContactRequest)
+class ContactRequestAdmin(admin.ModelAdmin):
+    list_display = ['id', 'first_name', 'last_name', 'email', 'created_at']
+    search_fields = ['first_name', 'last_name', 'email']

@@ -10,6 +10,9 @@ const PAGE_TITLES = {
   'student-dashboard': 'لوحة الطالب — تفاعلي',
   'tutor-dashboard': 'لوحة المدرس — تفاعلي',
   'edit-profile': 'تعديل الملف الشخصي — تفاعلي',
+  'privacy': 'سياسة الخصوصية — تفاعلي',
+  'terms': 'الشروط والأحكام — تفاعلي',
+  'faq': 'الأسئلة الشائعة — تفاعلي',
   '404': 'الصفحة غير موجودة — تفاعلي',
 }
 
@@ -41,6 +44,18 @@ const PAGE_METAS = {
   'edit-profile': {
     description: 'عدّل ملفك الشخصي على منصة تفاعلي — تحديث البيانات والتخصصات والمستوى التعليمي.',
     canonical: 'https://tafa3oly.com/edit-profile',
+  },
+  'privacy': {
+    description: 'سياسة الخصوصية لمنصة تفاعلي — كيف نجمع ونستخدم ونحمي بياناتك الشخصية.',
+    canonical: 'https://tafa3oly.com/privacy',
+  },
+  'terms': {
+    description: 'الشروط والأحكام لاستخدام منصة تفاعلي — حقوق ومسؤوليات المستخدمين.',
+    canonical: 'https://tafa3oly.com/terms',
+  },
+  'faq': {
+    description: 'الأسئلة الشائعة حول منصة تفاعلي — كيف تبدأ، الدفع، المدفوعات، والمزيد.',
+    canonical: 'https://tafa3oly.com/faq',
   },
   '404': {
     description: 'الصفحة التي تبحث عنها غير موجودة. عُد إلى الصفحة الرئيسية لمنصة تفاعلي.',

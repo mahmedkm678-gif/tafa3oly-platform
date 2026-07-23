@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from users.serializers import UserSerializer
 from files.serializers import FileSerializer
-from .models import Request, Session, MemorizationProgress
+from .models import Request, Session, MemorizationProgress, Review
 
 
 class RequestSerializer(serializers.ModelSerializer):
@@ -34,3 +34,12 @@ class ProgressSerializer(serializers.ModelSerializer):
                   'unit_from', 'unit_to', 'cefr_from', 'cefr_to',
                   'notes', 'tutor_notes', 'created_at']
         read_only_fields = ['id', 'created_at']
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    student_name = serializers.CharField(source='student.first_name', read_only=True)
+
+    class Meta:
+        model = Review
+        fields = ['id', 'session', 'student', 'tutor', 'rating', 'comment', 'student_name', 'created_at']
+        read_only_fields = ['id', 'student', 'created_at']
