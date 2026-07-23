@@ -1,4 +1,5 @@
 import { $ } from '../utils.js'
+import { esc } from '../utils.js'
 import { toast } from '../components/Toast.js'
 import { API_BASE, LEVEL_MAP, LEVEL_ICONS } from '../constants.js'
 import { api } from '../api.js'
@@ -8,7 +9,7 @@ import { Spinner } from '../components/Spinner.js'
 
 export function renderTutorDashboard() {
   return `
-    <div class="page" id="page-tutor-dashboard">
+    <div class="page active" id="page-tutor-dashboard">
       <div class="container" style="padding-top:32px;padding-bottom:40px">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px">
           <div>
@@ -78,7 +79,7 @@ async function tdLoadFiles() {
     const f = await r.json()
     if (!Array.isArray(f) || !f.length) { el.innerHTML = '<p class="empty">لا توجد ملفات متاحة</p>'; return }
     el.innerHTML = `<div class="table-wrap"><table><tr><th>#</th><th>التفاصيل</th><th>النوع</th><th>السعر الأساسي</th><th>إجراء</th></tr>${f.map(x =>
-      `<tr><td>${x.id}</td><td>${x.specialization || x.subject_type || tdLevel}${x.difficulty ? ' · ' + x.difficulty : ''}</td><td>${x.session_type === 'solo' ? 'فردي' : 'مجموعة'}</td><td>${x.base_price || '—'} ${x.currency || ''}</td><td><button class="btn btn-sm btn-primary offer-btn" data-fid="${x.id}" data-info="${(x.specialization || tdLevel)}">إرسال عرض</button></td></tr>`
+      `<tr><td>${x.id}</td><td>${esc(x.specialization || x.subject_type || tdLevel)}${x.difficulty ? ' · ' + esc(x.difficulty) : ''}</td><td>${x.session_type === 'solo' ? 'فردي' : 'مجموعة'}</td><td>${x.base_price || '—'} ${esc(x.currency || '')}</td><td><button class="btn btn-sm btn-primary offer-btn" data-fid="${x.id}" data-info="${esc(x.specialization || tdLevel)}">إرسال عرض</button></td></tr>`
     ).join('')}</table></div>`
     el.querySelectorAll('.offer-btn').forEach(btn => {
       btn.addEventListener('click', () => tdOpenModal(parseInt(btn.dataset.fid), btn.dataset.info))
@@ -92,7 +93,7 @@ async function tdLoadOffers() {
   try {
     const r = await api('GET', '/offers/')
     if (!Array.isArray(r) || !r.length) { el.innerHTML = '<p class="empty">لم ترسل أي عروض</p>'; return }
-    el.innerHTML = `<div class="table-wrap"><table><tr><th>#</th><th>سعري</th><th>نوع الدفع</th><th>الحالة</th><th>التاريخ</th></tr>${r.map(o => `<tr><td>${o.id}</td><td>${o.tutor_price || o.price}</td><td>${o.payment_type === 'monthly' ? 'شهري' : 'بالحصة'}</td><td><span class="badge badge-${o.status}">${o.status}</span></td><td>${new Date(o.created_at).toLocaleDateString('ar')}</td></tr>`).join('')}</table></div>`
+    el.innerHTML = `<div class="table-wrap"><table><tr><th>#</th><th>سعري</th><th>نوع الدفع</th><th>الحالة</th><th>التاريخ</th></tr>${r.map(o => `<tr><td>${o.id}</td><td>${o.tutor_price || o.price}</td><td>${o.payment_type === 'monthly' ? 'شهري' : 'بالحصة'}</td><td><span class="badge badge-${esc(o.status)}">${esc(o.status)}</span></td><td>${new Date(o.created_at).toLocaleDateString('ar')}</td></tr>`).join('')}</table></div>`
   } catch { el.innerHTML = '<p class="empty">خطأ في التحميل</p>' }
 }
 
@@ -130,7 +131,7 @@ async function tdLoadSessProg(sid) {
     if (!Array.isArray(r) || !r.length) { c.innerHTML = '<p style="color:var(--text-muted);font-size:.82rem">لا يوجد تقدم مسجل بعد</p>'; return }
     c.innerHTML = r.map(e => {
       const ft = e.juz_from ? `الجزء ${e.juz_from} ← ${e.juz_to}` : e.unit_from ? `${e.unit_from} ← ${e.unit_to}` : e.cefr_from ? `${e.cefr_from} ← ${e.cefr_to}` : '—'
-      return `<div class="progress-row"><strong>${ft}</strong> <span style="color:var(--text-muted);font-size:.8rem">${new Date(e.created_at).toLocaleDateString('ar')}</span>${e.tutor_notes ? '<div>📝 ' + e.tutor_notes + '</div>' : ''}</div>`
+      return `<div class="progress-row"><strong>${ft}</strong> <span style="color:var(--text-muted);font-size:.8rem">${new Date(e.created_at).toLocaleDateString('ar')}</span>${e.tutor_notes ? '<div>📝 ' + esc(e.tutor_notes) + '</div>' : ''}</div>`
     }).join('')
   } catch { }
 }
@@ -139,7 +140,7 @@ function tdOpenModal(fid, info) {
   tdCurrentFileId = fid
   const content = `
     <h3>إرسال عرض سعر</h3>
-    <p id="modalFileInfo" style="color:var(--text-muted);margin-bottom:12px;font-size:.9rem">${info}</p>
+    <p id="modalFileInfo" style="color:var(--text-muted);margin-bottom:12px;font-size:.9rem">${esc(info)}</p>
     <div class="form-group"><label>سعرك</label><input type="number" id="modalPrice" step="0.01" min="1"></div>
     <div class="form-group"><label>نوع الدفع</label><select id="modalPaymentType"><option value="per_session">بالحصة</option><option value="monthly">شهري</option></select></div>
     <div class="modal-btns">

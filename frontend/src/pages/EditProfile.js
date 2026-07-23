@@ -6,7 +6,7 @@ import { getRole, isLoggedIn, setUserData } from '../auth.js'
 
 export function renderEditProfile() {
   return `
-    <div class="page" id="page-edit-profile">
+    <div class="page active" id="page-edit-profile">
       <div class="container" style="padding-top:32px;padding-bottom:40px;max-width:640px">
         <h2 style="margin-bottom:4px">تعديل الملف الشخصي</h2>
         <p style="color:var(--text-muted);margin-bottom:24px;font-size:.9rem">حدّث بياناتك الشخصية والمهنية</p>

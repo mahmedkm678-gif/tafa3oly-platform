@@ -15,3 +15,9 @@ export function hide(el) {
 export function formatDate(d) {
   return new Date(d).toLocaleDateString('ar')
 }
+
+const ESC_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
+export function esc(str) {
+  if (str == null) return ''
+  return String(str).replace(/[&<>"']/g, c => ESC_MAP[c])
+}

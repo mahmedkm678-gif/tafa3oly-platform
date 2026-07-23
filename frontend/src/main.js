@@ -37,9 +37,8 @@ const routes = {
   '404': { render: renderNotFound },
 }
 
-const router = new Router(routes, renderNotFound)
-
 const app = document.getElementById('app')
 app.innerHTML = '<div id="navbar"></div><div id="page-wrap"></div><div id="footerWrap"></div>'
 
+const router = new Router(routes, renderNotFound)
 router.start('home')

@@ -24,7 +24,7 @@ export function renderQuranRequest() {
   const today = new Date()
   const minDate = today.toISOString().split('T')[0]
   return `
-    <div class="page" id="page-quran-request">
+    <div class="page active" id="page-quran-request">
       <div class="container" style="padding-top:40px;padding-bottom:40px">
         <div style="text-align:center;padding:30px 0 20px">
           <i class="fas fa-mosque" style="font-size:3rem;color:#10B981;margin-bottom:12px"></i>

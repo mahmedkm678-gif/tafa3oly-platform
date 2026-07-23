@@ -10,7 +10,7 @@ import { Spinner } from '../components/Spinner.js'
 
 export function renderStudentDashboard() {
   return `
-    <div class="page" id="page-student-dashboard">
+    <div class="page active" id="page-student-dashboard">
       <div class="container" style="padding-top:32px;padding-bottom:40px">
         <h2 style="margin-bottom:6px">مرحباً، <span class="gradient-text" id="sdUserName"></span></h2>
         <p style="color:var(--text-muted);margin-bottom:20px;font-size:.9rem" id="sdLevels"></p>
