@@ -2,6 +2,10 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from rest_framework import status
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from rest_framework.authtoken.models import Token
 from .models import User, ContactRequest
 
 
@@ -97,17 +101,17 @@ class AuthAPITests(APITestCase):
     def test_password_reset_flow(self):
         self.client.post(self.reg_url, self.reg_data, format="json")
 
+        user = User.objects.get(username="student1")
+
         # Request reset
         request_url = reverse("password-reset-request")
         response = self.client.post(request_url, {"email": "student1@example.com"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("reset_url", response.data)
+        self.assertNotIn("reset_url", response.data)
 
-        # Extract uid and token from URL
-        reset_url = response.data["reset_url"]
-        parts = reset_url.rstrip("/").split("/")
-        uid = parts[-2]
-        token = parts[-1]
+        # Generate uid and token directly
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
 
         # Confirm reset
         confirm_url = reverse("password-reset-confirm")

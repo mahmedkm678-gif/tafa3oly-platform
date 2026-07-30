@@ -1,9 +1,9 @@
 import { $ } from '../utils.js'
 import { esc } from '../utils.js'
 import { toast } from '../components/Toast.js'
-import { API_BASE, LEVEL_MAP, LEVEL_ICONS } from '../constants.js'
+import { LEVEL_MAP, LEVEL_ICONS } from '../constants.js'
 import { api } from '../api.js'
-import { getUser, getToken, isTutor } from '../auth.js'
+import { getUser, isTutor } from '../auth.js'
 import { openModal, closeModal } from '../components/Modal.js'
 import { Spinner } from '../components/Spinner.js'
 
@@ -75,8 +75,7 @@ async function tdLoadFiles() {
   const el = document.querySelector('#tdContent .tdFiles')
   if (!el) return
   try {
-    const r = await fetch(API_BASE + '/files/?level=' + tdLevel, { headers: { 'Authorization': 'Token ' + getToken() } })
-    const f = await r.json()
+    const f = await api('GET', '/files/?level=' + tdLevel)
     if (!Array.isArray(f) || !f.length) { el.innerHTML = '<p class="empty">لا توجد ملفات متاحة</p>'; return }
     el.innerHTML = `<div class="table-wrap"><table><tr><th>#</th><th>التفاصيل</th><th>النوع</th><th>السعر الأساسي</th><th>إجراء</th></tr>${f.map(x =>
       `<tr><td>${x.id}</td><td>${esc(x.specialization || x.subject_type || tdLevel)}${x.difficulty ? ' · ' + esc(x.difficulty) : ''}</td><td>${x.session_type === 'solo' ? 'فردي' : 'مجموعة'}</td><td>${x.base_price || '—'} ${esc(x.currency || '')}</td><td><button class="btn btn-sm btn-primary offer-btn" data-fid="${x.id}" data-info="${esc(x.specialization || tdLevel)}">إرسال عرض</button></td></tr>`

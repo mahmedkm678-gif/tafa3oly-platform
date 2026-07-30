@@ -73,13 +73,24 @@ export class Router {
       const btn = e.target.closest('.page-btn, .page-link')
       if (btn) this.navigate(btn.dataset.page)
     })
+    window.addEventListener('popstate', () => {
+      const page = this._pageFromPath()
+      if (page && page !== this.currentPage) {
+        this._doNavigate(page, false)
+      }
+    })
   }
 
-  navigate(page) {
+  _pageFromPath() {
+    const path = location.pathname.replace(/^\//, '')
+    return path || 'home'
+  }
+
+  _doNavigate(page, pushState = true) {
     if (page === this.currentPage) return
 
     if (!this.routes[page] && page !== 'home') {
-      this.navigate('404')
+      this._doNavigate('404', pushState)
       return
     }
 
@@ -92,12 +103,12 @@ export class Router {
 
     const guard = guards[page]
     if (guard && !guard()) {
-      this.navigate('login')
+      this._doNavigate('login', pushState)
       return
     }
 
     if ((page === 'login' || page === 'register') && isLoggedIn()) {
-      this.navigate(isStudent() ? 'student-dashboard' : 'tutor-dashboard')
+      this._doNavigate(isStudent() ? 'student-dashboard' : 'tutor-dashboard', pushState)
       return
     }
 
@@ -107,6 +118,10 @@ export class Router {
     const prevRoute = this.routes[prevPage]
     if (prevRoute?.cleanup) {
       prevRoute.cleanup()
+    }
+
+    if (pushState && this._pageFromPath() !== page) {
+      history.pushState({ page }, '', '/' + (page === 'home' ? '' : page))
     }
 
     const route = this.routes[page]
@@ -148,7 +163,13 @@ export class Router {
     }
   }
 
+  navigate(page) {
+    this._doNavigate(page, true)
+  }
+
   start(initialPage) {
-    this.navigate(initialPage)
+    const pathPage = this._pageFromPath()
+    const page = (pathPage !== 'home' && this.routes[pathPage]) ? pathPage : initialPage
+    this._doNavigate(page, false)
   }
 }

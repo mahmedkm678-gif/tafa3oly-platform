@@ -1,8 +1,8 @@
 import { $ } from '../utils.js'
 import { toast } from '../components/Toast.js'
-import { API_BASE, LEVELS_DATA, LANG_DATA, LEVEL_MAP, LEVEL_ICONS, DAYS } from '../constants.js'
+import { LEVELS_DATA, LANG_DATA, LEVEL_MAP, LEVEL_ICONS, DAYS } from '../constants.js'
 import { api } from '../api.js'
-import { getUser, getToken, isStudent } from '../auth.js'
+import { getUser, isStudent } from '../auth.js'
 import { loadFiles, loadTutors, loadProgress, loadOffers, loadTutorProfile } from '../utils/dashboardShared.js'
 import { closeModal } from '../components/Modal.js'
 import { confirmDialog } from '../components/ConfirmDialog.js'
@@ -164,11 +164,7 @@ function sdBuildAcademic(level, cont) {
     btn.disabled = true; btn.textContent = 'جاري التحليل...'
     const fd = new FormData(form)
     try {
-      const r = await fetch(API_BASE + '/files/upload/', {
-        method: 'POST', headers: { 'Authorization': 'Token ' + getToken() }, body: fd
-      })
-      const d = await r.json()
-      if (!r.ok) throw new Error(JSON.stringify(d))
+      const d = await api('POST', '/files/upload/', fd)
       const res = form.querySelector('.sdAcadResult')
       res.classList.remove('hidden')
       res.innerHTML = `<div class="price-box">

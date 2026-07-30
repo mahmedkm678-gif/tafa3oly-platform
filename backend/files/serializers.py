@@ -4,7 +4,7 @@ from .models import File, Language
 
 class FileUploadSerializer(serializers.Serializer):
     file = serializers.FileField(required=False)
-    country = serializers.ChoiceField(choices=["SA", "KW", "AE", "QA"])
+    country = serializers.ChoiceField(choices=["SA", "KW", "AE", "QA", "BH", "OM"])
     session_type = serializers.ChoiceField(choices=["solo", "group"])
     students_count = serializers.IntegerField(default=1, min_value=1, max_value=10)
     education_level = serializers.ChoiceField(choices=["university", "high_school", "middle_school", "primary"])
@@ -26,7 +26,7 @@ class StructuredRequestSerializer(serializers.Serializer):
     session_duration = serializers.IntegerField(default=45, min_value=15, max_value=180)
     start_date = serializers.DateField(required=False)
     weekly_availability = serializers.JSONField()
-    country = serializers.ChoiceField(choices=["SA", "KW", "AE", "QA"])
+    country = serializers.ChoiceField(choices=["SA", "KW", "AE", "QA", "BH", "OM"])
     notes = serializers.CharField(required=False, allow_blank=True)
 
 

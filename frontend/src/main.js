@@ -1,7 +1,7 @@
 import './styles/main.css'
 
 import { Router } from './router.js'
-import { renderHome, initHome } from './pages/Home.js'
+import { renderHome, initHome, cleanupHome } from './pages/Home.js'
 import { renderLogin, initLogin } from './pages/Login.js'
 import { renderRegister, initRegister } from './pages/Register.js'
 import { renderQuranRequest, initQuranRequest } from './pages/QuranRequest.js'
@@ -24,7 +24,7 @@ window.addEventListener('error', e => {
 })
 
 const routes = {
-  'home': { render: renderHome, init: initHome },
+  'home': { render: renderHome, init: initHome, cleanup: cleanupHome },
   'login': { render: renderLogin, init: initLogin },
   'register': { render: renderRegister, init: initRegister },
   'quran-request': { render: renderQuranRequest, init: initQuranRequest },

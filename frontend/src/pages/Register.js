@@ -1,6 +1,7 @@
 import { $ } from '../utils.js'
 import { toast } from '../components/Toast.js'
-import { API_BASE, LEVELS_DATA, LANG_DATA } from '../constants.js'
+import { LEVELS_DATA, LANG_DATA } from '../constants.js'
+import { api } from '../api.js'
 import { isLoggedIn, isStudent } from '../auth.js'
 
 export function renderRegister() {
@@ -92,11 +93,7 @@ export function initRegister(navigate) {
       body.student_levels = cl
     }
     try {
-      const r = await fetch(API_BASE + '/register/', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
-      })
-      const d = await r.json()
-      if (!r.ok) throw new Error(Object.values(d).flat().join(', '))
+      const d = await api('POST', '/register/', body, { auth: false })
       localStorage.setItem('access_token', d.token)
       localStorage.setItem('user', JSON.stringify(d.user))
       toast('تم إنشاء الحساب بنجاح', 'success')

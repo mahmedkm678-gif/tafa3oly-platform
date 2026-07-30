@@ -4,9 +4,15 @@
   --bg-dark-card-hover: hsl(222, 47%, 16%);
   --primary-blue: hsl(217, 91%, 60%);
   --accent-purple: hsl(263, 90%, 65%);
+  --accent-green: hsl(160, 84%, 39%);
+  --accent-blue: hsl(217, 91%, 60%);
   --text-white: hsl(210, 40%, 98%);
+  --text-primary: hsl(210, 40%, 98%);
   --text-gray-light: hsl(215, 20%, 90%);
   --text-gray-muted: hsl(215, 16%, 65%);
+  --text-muted: hsl(215, 16%, 65%);
+  --text-gray: hsl(215, 16%, 65%);
+  --border-subtle: 1px solid rgba(255, 255, 255, 0.08);
   --glass-bg: rgba(10, 19, 44, 0.6);
   --bg-card: hsl(222, 47%, 12%);
   --grad-primary: linear-gradient(135deg, var(--primary-blue), var(--accent-purple));

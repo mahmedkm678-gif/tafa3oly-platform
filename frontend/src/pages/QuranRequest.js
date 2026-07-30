@@ -1,7 +1,8 @@
 import { $ } from '../utils.js'
 import { toast } from '../components/Toast.js'
-import { API_BASE, DAYS } from '../constants.js'
-import { getToken, isLoggedIn } from '../auth.js'
+import { DAYS } from '../constants.js'
+import { isLoggedIn } from '../auth.js'
+import { api } from '../api.js'
 
 const JUZ_NAMES = [
   '', 'الفاتحة', 'البقرة', 'آل عمران', 'النساء', 'المائدة', 'الأنعام',
@@ -185,13 +186,7 @@ export function initQuranRequest() {
     if (sessionType === 'group') data.students_count = parseInt($('studentsCount').value)
 
     try {
-      const r = await fetch(API_BASE + '/files/structured-request/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Token ' + getToken() },
-        body: JSON.stringify(data)
-      })
-      const res = await r.json()
-      if (!r.ok) throw new Error(JSON.stringify(res))
+      const res = await api('POST', '/files/structured-request/', data)
       $('quranResult').style.display = 'block'
       $('quranResult').innerHTML = '<div class="price-box" style="margin:0"><div style="color:#10B981;font-weight:700;text-align:center">✅ تم إرسال طلب التحفيظ بنجاح</div></div>'
       e.target.reset()

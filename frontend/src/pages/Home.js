@@ -1,5 +1,6 @@
 import { toast } from '../components/Toast.js'
-import { API_BASE, COUNTRY_DATA } from '../constants.js'
+import { COUNTRY_DATA } from '../constants.js'
+import { api } from '../api.js'
 
 const HOME_LEVELS = [
   { icon: 'fa-mosque', color: '#10B981', bg: 'rgba(16,185,129,0.1)', title: 'القرآن الكريم', desc: 'حفظ وتجويد قرآن مع مدرسين متخصصين معتمدين', tag: 'حفظ + تجويد', priceKey: 'quran', link: 'quran-request' },
@@ -200,27 +201,22 @@ export function initHome() {
       e.preventDefault()
       const btn = f.querySelector('button[type="submit"]')
       btn.disabled = true
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> \u062c\u0627\u0631\u064a \u0627\u0644\u0625\u0631\u0633\u0627\u0644...'
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...'
       try {
         const fd = new FormData(f)
-        const r = await fetch(API_BASE + '/contact/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            first_name: fd.get('contactName') || '',
-            last_name: '',
-            email: fd.get('contactEmail') || '',
-            question: fd.get('contactMessage') || '',
-          })
-        })
-        if (!r.ok) throw new Error('\u0641\u0634\u0644 \u0627\u0644\u0625\u0631\u0633\u0627\u0644')
-        toast('\u062a\u0645 \u0627\u0644\u0625\u0631\u0633\u0627\u0644 \u0628\u0646\u062c\u0627\u062d! \u0633\u0646\u062a\u0648\u0627\u0635\u0644 \u0645\u0639\u0643 \u0642\u0631\u064a\u0628\u0627\u064b', 'success')
+        await api('POST', '/contact/', {
+          first_name: fd.get('contactName') || '',
+          last_name: '',
+          email: fd.get('contactEmail') || '',
+          question: fd.get('contactMessage') || '',
+        }, { auth: false })
+        toast('تم الإرسال بنجاح! سنتواصل معك قريباً', 'success')
         f.reset()
       } catch (err) {
-        toast('\u062d\u062f\u062b \u062e\u0637\u0623: ' + err.message, 'error')
+        toast('حدث خطأ: ' + err.message, 'error')
       } finally {
         btn.disabled = false
-        btn.innerHTML = '<i class="fas fa-paper-plane"></i> \u0625\u0631\u0633\u0627\u0644'
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال'
       }
     })
   }
@@ -233,9 +229,7 @@ async function initPricing() {
   async function loadPrices() {
     const country = sel.value
     try {
-      const r = await fetch(API_BASE + '/api/pricing/')
-      if (!r.ok) return
-      const pricing = await r.json()
+      const pricing = await api('GET', '/pricing/', null, { auth: false })
       const cp = pricing[country]
       if (!cp) return
       document.querySelectorAll('.home-price').forEach(el => {
@@ -243,15 +237,17 @@ async function initPricing() {
         const p = cp[key]
         if (p) {
           const sym = COUNTRY_DATA.find(c => c.code === country)?.symbol || ''
-          el.textContent = `${p.solo} ${sym} / \u0627\u0644\u062c\u0644\u0633\u0629`
+          el.textContent = `${p.solo} ${sym} / الجلسة`
         }
       })
-      } catch {}
+    } catch {}
   }
 
   await loadPrices()
   sel.addEventListener('change', loadPrices)
 }
+
+const _typewriterTimers = []
 
 function initTypewriter() {
   const el = document.getElementById('typewriter-text')
@@ -266,9 +262,19 @@ function initTypewriter() {
     } else {
       idx++
       el.textContent = w.substring(0, idx)
-      if (idx === w.length) { setTimeout(() => { del = true; tick() }, 2000); return }
+      if (idx === w.length) {
+        const t = setTimeout(() => { del = true; tick() }, 2000)
+        _typewriterTimers.push(t)
+        return
+      }
     }
-    setTimeout(tick, del ? 40 : 80)
+    const t = setTimeout(tick, del ? 40 : 80)
+    _typewriterTimers.push(t)
   }
   tick()
+}
+
+export function cleanupHome() {
+  _typewriterTimers.forEach(t => clearTimeout(t))
+  _typewriterTimers.length = 0
 }

@@ -1,5 +1,7 @@
 import { getUser, isLoggedIn, isStudent, isTutor, logout as authLogout } from '../auth.js'
 
+let _navbarClickHandler = null
+
 export function buildNavbar(navigate) {
   const u = getUser()
   const li = isLoggedIn()
@@ -56,9 +58,11 @@ export function buildNavbar(navigate) {
     e.stopPropagation()
     navMenu?.classList.toggle('open')
   })
-  document.addEventListener('click', e => {
+  if (_navbarClickHandler) document.removeEventListener('click', _navbarClickHandler)
+  _navbarClickHandler = e => {
     if (navMenu?.classList.contains('open') && !e.target.closest('.header')) {
       navMenu.classList.remove('open')
     }
-  })
+  }
+  document.addEventListener('click', _navbarClickHandler)
 }

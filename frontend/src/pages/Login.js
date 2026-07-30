@@ -1,6 +1,6 @@
 import { $ } from '../utils.js'
 import { toast } from '../components/Toast.js'
-import { API_BASE } from '../constants.js'
+import { api } from '../api.js'
 import { isLoggedIn, isStudent } from '../auth.js'
 
 export function renderLogin() {
@@ -35,13 +35,7 @@ export function initLogin(navigate) {
     const btn = $('loginBtn'), err = $('loginError')
     btn.disabled = true; btn.textContent = 'جاري الدخول...'; err.style.display = 'none'
     try {
-      const r = await fetch(API_BASE + '/login/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: $('loginEmail').value, password: $('loginPassword').value })
-      })
-      const d = await r.json()
-      if (!r.ok) throw new Error(d.error || 'بيانات الدخول غير صحيحة')
+      const d = await api('POST', '/login/', { email: $('loginEmail').value, password: $('loginPassword').value }, { auth: false })
       localStorage.setItem('access_token', d.token)
       localStorage.setItem('user', JSON.stringify(d.user))
       toast('تم تسجيل الدخول بنجاح', 'success')

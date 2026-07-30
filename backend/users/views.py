@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
+from django.core.cache import cache
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -19,10 +20,17 @@ logger = logging.getLogger(__name__)
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def register(request):
+    ip = request.META.get('REMOTE_ADDR', 'unknown')
+    rate_key = f'register_attempts:{ip}'
+    attempts = cache.get(rate_key, 0)
+    if attempts >= 5:
+        return Response({"error": "Too many registration attempts. Try again later."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
     serializer = RegisterSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     user = serializer.save()
     token, _ = Token.objects.get_or_create(user=user)
+    cache.set(rate_key, attempts + 1, 3600)
     return Response(
         {"token": token.key, "user": UserSerializer(user).data},
         status=status.HTTP_201_CREATED,
@@ -32,6 +40,12 @@ def register(request):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def login(request):
+    ip = request.META.get('REMOTE_ADDR', 'unknown')
+    rate_key = f'login_attempts:{ip}'
+    attempts = cache.get(rate_key, 0)
+    if attempts >= 10:
+        return Response({"error": "Too many login attempts. Try again in 15 minutes."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
     from django.contrib.auth import get_user_model
     User = get_user_model()
     password = request.data.get("password")
@@ -48,11 +62,14 @@ def login(request):
             user_obj = User.objects.get(username__iexact=email_or_username)
         username = user_obj.username
     except User.DoesNotExist:
+        cache.set(rate_key, attempts + 1, 900)
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
     user = authenticate(username=username, password=password)
     if not user:
+        cache.set(rate_key, attempts + 1, 900)
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+    cache.delete(rate_key)
     token, _ = Token.objects.get_or_create(user=user)
     return Response({"token": token.key, "user": UserSerializer(user).data})
 
@@ -77,7 +94,7 @@ def request_password_reset(request):
 
     logger.info(f"Password reset for {user.email}: {reset_url}")
 
-    return Response({"message": "If the email exists, a reset link has been sent.", "reset_url": reset_url})
+    return Response({"message": "If the email exists, a reset link has been sent."})
 
 
 @api_view(["POST"])
@@ -191,6 +208,12 @@ def logout(request):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def submit_contact_request(request):
+    ip = request.META.get('REMOTE_ADDR', 'unknown')
+    rate_key = f'contact_attempts:{ip}'
+    attempts = cache.get(rate_key, 0)
+    if attempts >= 5:
+        return Response({"error": "Too many submissions. Please try again later."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
     from .models import ContactRequest
     data = request.data
     first_name = data.get("first_name")
@@ -225,6 +248,7 @@ def submit_contact_request(request):
         employee_count=employee_count,
         question=question,
     )
+    cache.set(rate_key, attempts + 1, 3600)
 
     return Response(
         {

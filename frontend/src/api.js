@@ -1,8 +1,11 @@
 import { API_BASE } from './constants.js'
 import { getToken } from './auth.js'
 
-export async function api(method, url, body) {
-  const opts = { method, headers: { 'Authorization': 'Token ' + getToken() } }
+export async function api(method, url, body, { auth = true } = {}) {
+  const opts = { method, headers: {} }
+  if (auth && getToken()) {
+    opts.headers['Authorization'] = 'Token ' + getToken()
+  }
   if (body) {
     if (body instanceof FormData) {
       opts.body = body
@@ -12,9 +15,11 @@ export async function api(method, url, body) {
     }
   }
   const r = await fetch(API_BASE + url, opts)
-  const d = await r.json()
+  const text = await r.text()
+  let d
+  try { d = JSON.parse(text) } catch { d = { error: text || 'خطأ غير متوقع' } }
   if (!r.ok) {
-    const e = new Error(d.error || 'خطأ في الطلب')
+    const e = new Error(d.error || d.detail || 'خطأ في الطلب')
     e.data = d
     throw e
   }

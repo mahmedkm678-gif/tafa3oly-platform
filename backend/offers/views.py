@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -61,21 +61,24 @@ def accept_offer(request, pk):
     if request.user != offer.file.student:
         return Response({"error": "Only the file owner can accept offers"}, status=status.HTTP_403_FORBIDDEN)
 
-    offer.status = "accepted"
-    offer.save()
+    with transaction.atomic():
+        offer.status = "accepted"
+        offer.save()
 
-    offer.file.status = "matched"
-    offer.file.save()
+        offer.file.status = "matched"
+        offer.file.save()
 
-    base = float(offer.tutor_price)
-    platform_fee = round(base * settings.PLATFORM_FEE, 2)
-    tutor_amount = round(base * (1 - settings.PLATFORM_FEE), 2)
+        Request.objects.filter(file=offer.file, status="pending").exclude(id=offer.id).update(status="rejected")
 
-    session = Session.objects.create(
-        request=offer,
-        platform_fee=platform_fee,
-        tutor_amount=tutor_amount,
-    )
+        base = float(offer.tutor_price)
+        platform_fee = round(base * settings.PLATFORM_FEE, 2)
+        tutor_amount = round(base * (1 - settings.PLATFORM_FEE), 2)
+
+        session = Session.objects.create(
+            request=offer,
+            platform_fee=platform_fee,
+            tutor_amount=tutor_amount,
+        )
 
     return Response(
         {
@@ -169,7 +172,12 @@ def create_review(request):
     if not session_id or not rating:
         return Response({"error": "session_id and rating are required"}, status=status.HTTP_400_BAD_REQUEST)
 
-    if not (1 <= int(rating) <= 5):
+    try:
+        rating = int(rating)
+    except (TypeError, ValueError):
+        return Response({"error": "Rating must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
+
+    if not (1 <= rating <= 5):
         return Response({"error": "Rating must be between 1 and 5"}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
