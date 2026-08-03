@@ -58,29 +58,11 @@ def execute_paypal_payment(payment_id, payer_id):
     raise RuntimeError(f"PayPal execution failed: {payment.error}")
 
 
-def send_tutor_payout(tutor_email, amount, currency, note="Tutoring session payout"):
-    configure_paypal()
-    payout = paypalrestsdk.Payout({
-        "sender_batch_header": {
-            "sender_batch_id": f"payout_{int(__import__('time').time())}",
-            "email_subject": "New payment received!",
-            "email_message": note,
-        },
-        "items": [{
-            "recipient_type": "EMAIL",
-            "amount": {"value": f"{amount:.2f}", "currency": currency},
-            "receiver": tutor_email,
-            "note": note,
-        }],
-    })
-    if payout.create():
-        return payout.batch_header.payout_batch_id
-    raise RuntimeError(f"PayPal payout failed: {payout.error}")
-
-
 def verify_webhook_signature(request):
     webhook_id = settings.PAYPAL_WEBHOOK_ID
     if not webhook_id:
+        logger = __import__('logging').getLogger(__name__)
+        logger.warning("PAYPAL_WEBHOOK_ID not set — webhook signature verification skipped")
         return True
     configure_paypal()
     headers = request.META

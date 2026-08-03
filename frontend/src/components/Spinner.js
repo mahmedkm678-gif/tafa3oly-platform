@@ -1,7 +1,7 @@
 export function Spinner(size = 'md') {
   const sizes = { sm: '20px', md: '36px', lg: '56px' }
   const px = sizes[size] || sizes.md
-  return `<div class="spinner" style="width:${px};height:${px};border:3px solid rgba(139,92,246,0.15);border-top-color:var(--accent-purple);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto"></div>`
+  return `<div class="spinner" style="width:${px};height:${px};border:3px solid rgba(180,40,30,0.15);border-top-color:var(--red);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto"></div>`
 }
 
 export function Skeleton({ width = '100%', height = '16px', count = 1, style = '' } = {}) {

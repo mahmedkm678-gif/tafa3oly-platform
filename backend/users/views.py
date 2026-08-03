@@ -11,7 +11,10 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
-from .serializers import RegisterSerializer, UserSerializer, TutorProfileSerializer
+from .models import Complaint
+from .serializers import (
+    RegisterSerializer, UserSerializer, TutorProfileSerializer, ComplaintSerializer,
+)
 from .services import upload_profile_picture
 
 logger = logging.getLogger(__name__)
@@ -69,6 +72,8 @@ def login(request):
     if not user:
         cache.set(rate_key, attempts + 1, 900)
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+    if user.is_banned:
+        return Response({"error": "تم حظر حسابك. تواصل مع إدارة المنصة."}, status=status.HTTP_403_FORBIDDEN)
     cache.delete(rate_key)
     token, _ = Token.objects.get_or_create(user=user)
     return Response({"token": token.key, "user": UserSerializer(user).data})
@@ -178,7 +183,10 @@ def available_tutors(request):
     from .models import User
     cutoff = timezone.now() - timedelta(minutes=2)
     User.objects.filter(role="tutor", is_available=True, last_seen__lt=cutoff).update(is_available=False)
-    qs = User.objects.filter(role="tutor", is_available=True, last_seen__gte=cutoff)
+    qs = User.objects.filter(
+        role="tutor", is_available=True, is_approved=True, is_banned=False,
+        last_seen__gte=cutoff,
+    )
     level = request.query_params.get("level")
     if level:
         qs = qs.filter(teaching_level=level)
@@ -257,4 +265,112 @@ def submit_contact_request(request):
         },
         status=status.HTTP_201_CREATED,
     )
+
+
+def is_admin(user):
+    return bool(user.is_staff or user.is_superuser)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def submit_complaint(request):
+    if request.user.role != "student":
+        return Response({"error": "Only students can submit complaints"}, status=status.HTTP_403_FORBIDDEN)
+
+    from offers.models import Session
+    session_id = request.data.get("session_id")
+    reason = request.data.get("reason", "").strip()
+
+    if not session_id or not reason:
+        return Response({"error": "session_id and reason are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        session = Session.objects.select_related("request__tutor").get(
+            id=session_id, request__file__student=request.user, status="done"
+        )
+    except Session.DoesNotExist:
+        return Response({"error": "Session not found or not completed"}, status=status.HTTP_404_NOT_FOUND)
+
+    complaint = Complaint.objects.create(
+        student=request.user,
+        tutor=session.request.tutor,
+        session=session,
+        reason=reason,
+    )
+    return Response(ComplaintSerializer(complaint).data, status=status.HTTP_201_CREATED)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def list_my_complaints(request):
+    qs = Complaint.objects.filter(student=request.user).order_by("-created_at")
+    return Response(ComplaintSerializer(qs, many=True).data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def admin_list_complaints(request):
+    if not is_admin(request.user):
+        return Response({"error": "Admins only"}, status=status.HTTP_403_FORBIDDEN)
+    qs = Complaint.objects.select_related("student", "tutor").order_by("-created_at")
+    return Response(ComplaintSerializer(qs, many=True).data)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def admin_resolve_complaint(request, pk):
+    if not is_admin(request.user):
+        return Response({"error": "Admins only"}, status=status.HTTP_403_FORBIDDEN)
+
+    try:
+        complaint = Complaint.objects.select_related("tutor").get(id=pk)
+    except Complaint.DoesNotExist:
+        return Response({"error": "Complaint not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    action = request.data.get("action", "").strip()
+    admin_note = request.data.get("admin_note", "").strip()
+    complaint.admin_note = admin_note
+
+    if action == "valid":
+        other_complaints = Complaint.objects.filter(tutor=complaint.tutor).exclude(
+            id=complaint.id
+        ).exclude(status="dismissed").count()
+        if other_complaints >= 1:
+            complaint.status = "banned"
+            complaint.tutor.is_banned = True
+            complaint.tutor.save(update_fields=["is_banned"])
+        else:
+            complaint.status = "valid"
+    elif action == "ban":
+        complaint.status = "banned"
+        complaint.tutor.is_banned = True
+        complaint.tutor.save(update_fields=["is_banned"])
+    elif action == "dismiss":
+        complaint.status = "dismissed"
+    else:
+        return Response({"error": "action must be valid, ban, or dismiss"}, status=status.HTTP_400_BAD_REQUEST)
+
+    complaint.save()
+    return Response(ComplaintSerializer(complaint).data)
+
+
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+def admin_approve_tutor(request, pk):
+    if not is_admin(request.user):
+        return Response({"error": "Admins only"}, status=status.HTTP_403_FORBIDDEN)
+
+    from .models import User
+    try:
+        tutor = User.objects.get(id=pk, role="tutor")
+    except User.DoesNotExist:
+        return Response({"error": "Tutor not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    approved = request.data.get("approved")
+    if approved is None:
+        return Response({"error": "approved is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    tutor.is_approved = bool(approved)
+    tutor.save(update_fields=["is_approved"])
+    return Response({"id": tutor.id, "is_approved": tutor.is_approved})
 

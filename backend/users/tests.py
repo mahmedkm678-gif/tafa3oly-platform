@@ -130,3 +130,87 @@ class AuthAPITests(APITestCase):
         }, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+
+class BanAndComplaintTests(APITestCase):
+    def setUp(self):
+        self.student = User.objects.create_user(
+            username="student1", email="s1@test.com",
+            password="pass12345", role="student"
+        )
+        self.tutor = User.objects.create_user(
+            username="tutor1", email="t1@test.com",
+            password="pass12345", role="tutor",
+            teaching_level="university"
+        )
+        from files.models import File
+        from offers.models import Request, Session
+        self.file = File.objects.create(
+            student=self.student, education_level="university",
+            specialization="Math", base_price=30, currency="SAR",
+            session_type="solo", status="done"
+        )
+        self.offer = Request.objects.create(
+            file=self.file, tutor=self.tutor,
+            tutor_price=25, payment_type="per_session", status="accepted"
+        )
+        self.session = Session.objects.create(
+            request=self.offer, platform_fee=3.75,
+            tutor_amount=21.25, status="done"
+        )
+        self.student_token = Token.objects.create(user=self.student).key
+
+    def test_banned_user_cannot_login(self):
+        self.tutor.is_banned = True
+        self.tutor.save()
+        response = self.client.post(reverse("login"), {
+            "username": "tutor1",
+            "password": "pass12345"
+        }, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_submit_complaint(self):
+        from .models import Complaint
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.student_token}")
+        response = self.client.post(reverse("complaint-submit"), {
+            "session_id": self.session.id,
+            "reason": "لم يلتزم المدرس بالموعد"
+        }, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Complaint.objects.count(), 1)
+
+    def test_admin_ban_tutor_on_repeat_complaints(self):
+        from .models import Complaint
+        admin = User.objects.create_superuser(
+            username="admin", email="admin@test.com", password="pass12345"
+        )
+        admin_token = Token.objects.create(user=admin).key
+        Complaint.objects.create(student=self.student, tutor=self.tutor, reason="أول شكوى")
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.student_token}")
+        response = self.client.post(reverse("complaint-submit"), {
+            "session_id": self.session.id,
+            "reason": "شكوى ثانية"
+        }, format="json")
+        complaint_id = response.data["id"]
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {admin_token}")
+        response = self.client.post(reverse("admin-complaint-resolve", args=[complaint_id]), {
+            "action": "valid"
+        }, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["status"], "banned")
+        self.tutor.refresh_from_db()
+        self.assertTrue(self.tutor.is_banned)
+
+    def test_admin_approve_tutor(self):
+        admin = User.objects.create_superuser(
+            username="admin", email="admin@test.com", password="pass12345"
+        )
+        admin_token = Token.objects.create(user=admin).key
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {admin_token}")
+        response = self.client.put(reverse("admin-tutor-approval", args=[self.tutor.id]), {
+            "approved": True
+        }, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.tutor.refresh_from_db()
+        self.assertTrue(self.tutor.is_approved)
+

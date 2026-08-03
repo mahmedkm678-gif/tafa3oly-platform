@@ -57,21 +57,37 @@ export async function loadProgress(el) {
   } catch { el.innerHTML = '<p class="empty">خطأ في التحميل</p>' }
 }
 
-export async function loadOffers(el, onAccept) {
+export async function loadOffers(el, onReject, onPay) {
   if (!el) return
   try {
     const r = await api('GET', '/offers/')
     if (!Array.isArray(r) || !r.length) { el.innerHTML = '<p class="empty">لا توجد عروض</p>'; return }
-    el.innerHTML = `<div class="table-wrap"><table><tr><th>#</th><th>السعر</th><th>الحالة</th>${onAccept ? '<th>إجراء</th>' : ''}</tr>${r.map(o => `
+    el.innerHTML = `<div class="table-wrap"><table><tr><th>#</th><th>السعر</th><th>الحالة</th>${onReject || onPay ? '<th>إجراء</th>' : ''}</tr>${r.map(o => {
+      const needsPay = onPay && o.status === 'accepted' && o.session_status === 'awaiting_payment'
+      const canReject = onReject && o.status === 'pending'
+      let trial = ''
+      if (o.session_is_trial) trial = ' <span class="badge badge-matched" style="font-size:.7rem">مجانية</span>'
+      const action = canReject
+        ? `<button class="btn btn-sm btn-ghost offer-reject-btn" data-id="${o.id}">رفض</button>`
+        : needsPay
+          ? `<button class="btn btn-sm btn-primary offer-pay-btn" data-sid="${o.session_id}" data-amount="${o.tutor_price}" data-currency="${o.file?.currency || ''}">ادفع الآن (PayPal)</button>`
+          : onReject || onPay ? '—' : ''
+      return `
       <tr>
         <td>${o.id}</td>
-        <td>${o.tutor_price || o.price}</td>
+        <td>${o.tutor_price || o.price} ${o.file?.currency || ''}${trial}</td>
         <td><span class="badge badge-${esc(o.status)}">${esc(o.status)}</span></td>
-        ${onAccept && o.status === 'pending' ? `<td><button class="btn btn-sm btn-primary offer-accept-btn" data-id="${o.id}">قبول</button></td>` : onAccept ? '<td>—</td>' : ''}
-      </tr>`).join('')}</table></div>`
-    if (onAccept) {
-      el.querySelectorAll('.offer-accept-btn').forEach(btn => {
-        btn.addEventListener('click', () => onAccept(parseInt(btn.dataset.id)))
+        <td>${action}</td>
+      </tr>`
+    }).join('')}</table></div>`
+    if (onReject) {
+      el.querySelectorAll('.offer-reject-btn').forEach(btn => {
+        btn.addEventListener('click', () => onReject(parseInt(btn.dataset.id)))
+      })
+    }
+    if (onPay) {
+      el.querySelectorAll('.offer-pay-btn').forEach(btn => {
+        btn.addEventListener('click', () => onPay(parseInt(btn.dataset.sid), btn.dataset.amount, btn.dataset.currency))
       })
     }
   } catch { el.innerHTML = '<p class="empty">خطأ في التحميل</p>' }

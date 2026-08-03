@@ -2,23 +2,27 @@ export function renderFAQ() {
   const faqs = [
     {
       q: "كيف تبدأ مع تفاعلي؟",
-      a: "أنشئ حسابك المجاني واختر دورك (طالب أو مدرس). كطالب، ارفع ملفك أو أرسل طلب تحفيظ القرآن. كدرس، اعرض سعرك على الطلبات المتوافقة مع تخصصك."
+      a: "أنشئ حسابك المجاني واختر دورك (طالب أو مدرس). كطالب، ارفع ملفاً لا تفهمه أو أرسل طلب تحفيظ القرآن. كدرس، انتظر الترشيح من الذكاء الاصطناعي أو اعرض سعرك على الطلبات المتوافقة مع تخصصك."
     },
     {
       q: "كيف يعمل التحليل بالذكاء الاصطناعي؟",
-      a: "عند رفع ملف PDF، يقوم الذكاء الاصطناعي (Gemini) بتحليل المحتوى واستخراج التخصص، مستوى الصعوبة، وعدد الساعات المقدرة. ثم يتم احتساب السعر تلقائياً."
+      a: "عند رفع ملف PDF، يقوم الذكاء الاصطناعي (Gemini) بتحليل المحتوى وتقييم صعوبته وعدد الساعات المقدرة، ثم يقترح سعراً ويرشّح مدرساً متخصصاً. المدرس هو من يقرر السعر النهائي (يقبل أو يعدّل أو يرفض)."
+    },
+    {
+      q: "هل أول جلسة مجانية؟",
+      a: "نعم، أول جلسة مع أي مدرس جديد مجانية تماماً ولا يدفع الطالب فيها شيئاً."
     },
     {
       q: "كيف يتم الدفع؟",
-      a: "تتم المدفوعات بشكل آمن عبر PayPal. عند قبول عرض المدرس، يُ redirected الطالب لصفحة PayPal لتأكيد الدفع. العمولة 15% تُخصم تلقائياً."
+      a: "يدفع الطالب المنصة مباشرة عبر PayPal عند تأكيد المدرس للسعر. لا يوجد أي دفع مباشر من الطالب إلى المدرس. العمولة 15% تُخصم تلقائياً من سعر المدرس."
     },
     {
       q: "كيف يحصل المدرس على أجره؟",
-      a: "بعد تأكيد الدفع واكتمال الجلسة، يتم تحويل المبلغ المحدد (بعد خصم العمولة) تلقائياً لحساب PayPal الخاص بالمدرس."
+      a: "تُجمّع أرباح المدرس خلال الشهر (بعد خصم عمولة المنصة) وتُحوَّل له شهرياً عبر إنستاباي أو فودافون كاش."
     },
     {
       q: "هل يمكنني تغيير المدرس؟",
-      a: "نعم، يمكنك رفض أي عرض جديد والبحث عن مدرس آخر. إذا كنت في جلسة نشطة، يجب إنهاء الجلسة أولاً."
+      a: "نعم، يمكنك رفض أي ترشيح أو عرض جديد والبحث عن مدرس آخر. إذا كنت في جلسة نشطة، يجب إنهاء الجلسة أولاً."
     },
     {
       q: "ما هي المستويات التعليمية المدعومة؟",
@@ -30,13 +34,15 @@ export function renderFAQ() {
     <div class="page active" style="max-width:800px;margin:0 auto;padding:40px 24px 80px">
       <h1 style="margin-bottom:32px;text-align:center">الأسئلة الشائعة</h1>
       <div style="display:flex;flex-direction:column;gap:12px">
-        ${faqs.map(f => `
-          <details style="background:var(--glass-bg);border:1px solid var(--border-subtle);border-radius:12px;padding:20px 24px;backdrop-filter:blur(12px)">
-            <summary style="cursor:pointer;font-weight:600;font-size:1.05rem;color:var(--text-primary);list-style:none;display:flex;justify-content:space-between;align-items:center">
-              ${f.q}
-              <i class="fas fa-chevron-down" style="color:var(--text-muted);transition:transform 0.3s;font-size:0.8rem"></i>
+        ${faqs.map((f, i) => `
+          <details class="faq-item" style="background:var(--bg-dark-card);border:var(--border-glass);border-radius:var(--radius-md);overflow:hidden${i === 0 ? ';open' : ''}">
+            <summary style="padding:16px 20px;cursor:pointer;font-weight:700;font-size:.92rem;display:flex;align-items:center;justify-content:space-between;list-style:none">
+              <span>${f.q}</span>
+              <i class="fas fa-chevron-down" style="color:var(--red);transition:transform .3s;font-size:.8rem"></i>
             </summary>
-            <p style="color:var(--text-muted);line-height:1.8;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle)">${f.a}</p>
+            <div style="padding:0 20px 16px;color:var(--text-gray-muted);font-size:.88rem;line-height:1.8">
+              ${f.a}
+            </div>
           </details>
         `).join('')}
       </div>

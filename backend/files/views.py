@@ -6,7 +6,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import File
 from .serializers import FileUploadSerializer, StructuredRequestSerializer, FileSerializer
-from .services import upload_to_supabase, extract_text_from_pdf, analyze_with_gemini, calculate_price
+from .services import (
+    upload_to_supabase, extract_text_from_pdf, analyze_with_gemini,
+    calculate_price, match_tutor,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +48,11 @@ def upload_file(request):
         max_students=max_students,
     )
 
+    matched_tutor = match_tutor(file_record, pricing["base_price"])
+
     result = FileSerializer(file_record).data
     result["pricing_breakdown"] = pricing
+    result["matched_tutor"] = matched_tutor.id if matched_tutor else None
     return Response(result, status=status.HTTP_201_CREATED)
 
 
@@ -58,6 +64,10 @@ def list_files(request):
     if level:
         qs = qs.filter(education_level=level)
     if request.user.role == "tutor":
+        if request.user.is_banned:
+            return Response({"error": "تم حظر حسابك"}, status=status.HTTP_403_FORBIDDEN)
+        if not request.user.is_approved:
+            return Response({"error": "حسابك قيد مراجعة الإدارة"}, status=status.HTTP_403_FORBIDDEN)
         tl = request.user.teaching_level
         if tl:
             qs = qs.filter(education_level=tl, status="pending")

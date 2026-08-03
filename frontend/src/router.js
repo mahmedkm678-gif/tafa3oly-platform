@@ -1,6 +1,7 @@
 import { isLoggedIn, isStudent, isTutor } from './auth.js'
 import { buildNavbar } from './components/Navbar.js'
 import { buildFooter } from './components/Footer.js'
+import { initReveal, initCounters, initParallax, initScrollProgress, initCursorGlow, initTiltCards } from './utils/animations.js'
 
 const PAGE_TITLES = {
   'home': 'تفاعلي — منصة التعليم الذكية',
@@ -126,8 +127,7 @@ export class Router {
 
     const route = this.routes[page]
     if (route) {
-      this._wrap.style.opacity = '0'
-      this._wrap.style.transition = 'opacity 0.2s ease'
+      this._wrap.classList.add('page-transitioning')
 
       setTimeout(() => {
         try {
@@ -136,14 +136,25 @@ export class Router {
           console.error('Render error:', e)
           this._wrap.innerHTML = `
             <div class="page active" style="text-align:center;padding:100px 24px">
-              <i class="fas fa-exclamation-triangle" style="font-size:3rem;color:var(--accent-purple);margin-bottom:16px"></i>
+              <i class="fas fa-exclamation-triangle" style="font-size:3rem;color:var(--red);margin-bottom:16px"></i>
               <h2>عذراً، حدث خطأ في تحميل الصفحة</h2>
               <p style="color:var(--text-muted);margin:12px 0 24px">يرجى المحاولة مرة أخرى</p>
               <button class="btn btn-primary page-btn" data-page="home">العودة للرئيسية</button>
             </div>`
         }
-        this._wrap.style.opacity = '1'
-      }, 150)
+
+        initReveal(this._wrap)
+        initCounters(this._wrap)
+        initTiltCards(this._wrap)
+
+        requestAnimationFrame(() => {
+          this._wrap.classList.remove('page-transitioning')
+        })
+
+        if (route.init) {
+          setTimeout(() => route.init(this.navigate.bind(this)), 80)
+        }
+      }, 250)
     }
 
     window.scrollTo(0, 0)
@@ -157,10 +168,9 @@ export class Router {
 
     buildNavbar(this.navigate.bind(this))
     buildFooter(this.navigate.bind(this))
-
-    if (route?.init) {
-      setTimeout(() => route.init(this.navigate.bind(this)), 200)
-    }
+    initParallax()
+    initScrollProgress()
+    initCursorGlow()
   }
 
   navigate(page) {

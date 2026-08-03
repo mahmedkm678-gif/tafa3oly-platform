@@ -202,12 +202,22 @@ PRICING = {
         "kindergarten": {"solo": 1.2, "group": 0.8, "currency": "OMR"},
         "languages": {"solo": 2.5, "group": 1.7, "currency": "OMR"},
     },
+    "EG": {
+        "quran": {"solo": 150, "group": 100, "currency": "EGP"},
+        "university": {"solo": 200, "group": 140, "currency": "EGP"},
+        "high_school": {"solo": 180, "group": 120, "currency": "EGP"},
+        "middle_school": {"solo": 150, "group": 100, "currency": "EGP"},
+        "primary": {"solo": 120, "group": 80, "currency": "EGP"},
+        "kindergarten": {"solo": 100, "group": 70, "currency": "EGP"},
+        "languages": {"solo": 180, "group": 120, "currency": "EGP"},
+    },
 }
 
 MAX_GROUP_SIZE = 10
 PLATFORM_FEE = 0.15
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:5173,http://127.0.0.1:8000', cast=Csv())
 CORS_ALLOW_CREDENTIALS = True
 
 PAYPAL_CLIENT_ID = config('PAYPAL_CLIENT_ID', default='')

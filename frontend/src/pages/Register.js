@@ -3,14 +3,18 @@ import { toast } from '../components/Toast.js'
 import { LEVELS_DATA, LANG_DATA } from '../constants.js'
 import { api } from '../api.js'
 import { isLoggedIn, isStudent } from '../auth.js'
+import { EagleSeal } from '../components/EagleSeal.js'
 
 export function renderRegister() {
   return `
     <div class="page" id="page-register" style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:100px 24px 40px">
-      <div class="glass-card" style="width:100%;max-width:600px;padding:28px">
-        <div class="logo" style="justify-content:center;margin-bottom:24px"><span class="logo-cap"><i class="fas fa-graduation-cap"></i></span> تفاعلي</div>
-        <h1 style="text-align:center;font-size:1.6rem;margin-bottom:6px">إنشاء حساب جديد</h1>
-        <p style="text-align:center;color:var(--text-gray-muted);margin-bottom:28px;font-size:.9rem">سجل كمدرس أو طالب في المنصة</p>
+      <div class="glass-card" style="width:100%;max-width:600px;padding:32px;position:relative;overflow:hidden">
+        <div style="position:absolute;top:-20px;right:-20px;opacity:0.04;transform:rotate(15deg)">${EagleSeal(120, false)}</div>
+        <div style="text-align:center;margin-bottom:24px;position:relative">
+          <img src="/logo.jpg" alt="تفاعلي" style="width:54px;height:54px;border-radius:10px;object-fit:cover;border:1px solid rgba(255,255,255,0.1);display:inline-block;">
+          <h1 style="font-family:var(--font-heading);font-size:1.5rem;margin-top:12px;margin-bottom:4px">إنشاء حساب جديد</h1>
+          <p style="color:var(--text-gray-muted);margin-bottom:0;font-size:.88rem">سجل كمدرس أو طالب في المنصة</p>
+        </div>
         <form id="registerForm">
           <div class="form-row">
             <div class="form-group"><label>الاسم الأول</label><input type="text" id="regFirstName" required placeholder="أحمد"></div>
@@ -24,7 +28,8 @@ export function renderRegister() {
           <div class="form-group"><label>كلمة المرور</label><input type="password" id="regPassword" required minlength="8" placeholder="أقل 8 أحرف"></div>
           <div class="form-group"><label>المستوى الدراسي</label><div id="regLevels" class="checkbox-group"></div><div style="color:var(--text-gray-muted);font-size:.75rem;margin-top:4px" id="regLevelHint">اختر مستوى واحد للتخصص كمدرس / مستوى أو أكثر كطالب</div></div>
           <div class="form-group"><label>التخصص</label><input type="text" id="regSpecialization" placeholder="مثال: تحفيظ قرآن, رياضيات, لغة إنجليزية"></div>
-          <div id="regPaypalGroup" class="form-group" style="display:none"><label>بريد PayPal (للاستلام)</label><input type="email" id="regPaypalEmail" placeholder="tutor@paypal.com"></div>
+          <div id="regPayGroup" class="form-group" style="display:none"><label>رقم إنستاباي (للاستلام الشهري)</label><input type="tel" id="regInstapay" placeholder="01xxxxxxxxx"></div>
+          <div id="regVodafoneGroup" class="form-group" style="display:none"><label>رقم فودافون كاش (اختياري)</label><input type="tel" id="regVodafone" placeholder="01xxxxxxxxx"></div>
           <div id="regLangGroup" class="form-group" style="display:none"><label>اللغات التي تدرسها</label><div id="regLangs" class="checkbox-group"></div></div>
           <div id="regTutorFields" style="border-top:1px solid rgba(255,255,255,0.06);padding-top:18px;margin-top:18px;display:none">
             <h3 style="color:var(--primary-blue);font-size:1rem;margin-bottom:14px">بيانات المدرس</h3>
@@ -32,11 +37,12 @@ export function renderRegister() {
             <div class="form-group"><label>المؤهل العلمي</label><input type="text" id="regEducation" placeholder="مثال: بكالوريوس لغة عربية - جامعة الأزهر"></div>
             <div class="form-group"><label>الإجازات والشهادات</label><textarea id="regCertificates" placeholder="مثال: إجازة برواية حفص عن عاصم..."></textarea></div>
             <div class="form-group"><label>نبذة عني</label><textarea id="regBio" placeholder="اكتب نبذة مختصرة عن خبراتك..."></textarea></div>
+            <p style="color:var(--gold);font-size:.8rem;line-height:1.8">بعد التسجيل سيكون حسابك <strong>قيد مراجعة الإدارة</strong> ولن يظهر للطلاب حتى يتم اعتماده. تصلك أرباحك شهرياً عبر إنستاباي أو فودافون كاش.</p>
           </div>
           <p id="regError" style="color:#EF4444;font-size:.85rem;text-align:center;display:none"></p>
           <button type="submit" class="btn btn-primary" style="width:100%" id="regBtn">تسجيل</button>
         </form>
-        <div style="text-align:center;margin-top:18px;font-size:.9rem;color:var(--text-gray-muted)">لديك حساب؟ <a class="page-link" data-page="login" style="color:var(--accent-purple);font-weight:600;cursor:pointer">تسجيل دخول</a></div>
+        <div style="text-align:center;margin-top:18px;font-size:.9rem;color:var(--text-gray-muted)">لديك حساب؟ <a class="page-link" data-page="login" style="color:var(--red);font-weight:600;cursor:pointer">تسجيل دخول</a></div>
       </div>
     </div>
   `
@@ -59,7 +65,8 @@ export function initRegister(navigate) {
 
   $('regRole').addEventListener('change', function () {
     const t = this.value === 'tutor'
-    $('regPaypalGroup').style.display = t ? 'block' : 'none'
+    $('regPayGroup').style.display = t ? 'block' : 'none'
+    $('regVodafoneGroup').style.display = t ? 'block' : 'none'
     $('regTutorFields').style.display = t ? 'block' : 'none'
     $('regLangGroup').style.display = t ? 'block' : 'none'
     levelsContainer.querySelectorAll('input[type="checkbox"]').forEach(c => { c.checked = false })
@@ -84,7 +91,8 @@ export function initRegister(navigate) {
     if (role === 'tutor') {
       body.teaching_level = cl[0]
       body.languages = [...document.querySelectorAll('#regLangs input:checked')].map(c => c.value)
-      body.paypal_email = $('regPaypalEmail').value
+      body.instapay_phone = $('regInstapay').value
+      body.vodafone_cash = $('regVodafone').value
       body.years_experience = $('regExperience').value || null
       body.education = $('regEducation').value
       body.certificates = $('regCertificates').value

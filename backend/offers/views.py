@@ -6,7 +6,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from files.models import File
 from .models import Request, Session, MemorizationProgress, Review
-from .serializers import RequestSerializer, RequestDetailSerializer, ProgressSerializer, ReviewSerializer
+from .serializers import (
+    RequestSerializer, RequestDetailSerializer, ProgressSerializer, ReviewSerializer,
+)
 
 
 @api_view(["GET"])
@@ -28,6 +30,10 @@ def list_offers(request):
 def create_offer(request):
     if request.user.role != "tutor":
         return Response({"error": "Only tutors can create offers"}, status=status.HTTP_403_FORBIDDEN)
+    if request.user.is_banned:
+        return Response({"error": "تم حظر حسابك"}, status=status.HTTP_403_FORBIDDEN)
+    if not request.user.is_approved:
+        return Response({"error": "حسابك قيد مراجعة الإدارة ولم يتم اعتماده بعد"}, status=status.HTTP_403_FORBIDDEN)
 
     file_id = request.data.get("file_id")
     tutor_price = request.data.get("tutor_price")
@@ -52,17 +58,36 @@ def create_offer(request):
 
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
-def accept_offer(request, pk):
+def respond_offer(request, pk):
+    """Tutor accepts, rejects, or adjusts the price of a proposal (AI-matched or manual)."""
     try:
-        offer = Request.objects.get(id=pk, status="pending")
+        offer = Request.objects.get(id=pk, tutor=request.user, status="pending")
     except Request.DoesNotExist:
         return Response({"error": "Offer not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    if request.user != offer.file.student:
-        return Response({"error": "Only the file owner can accept offers"}, status=status.HTTP_403_FORBIDDEN)
+    action = request.data.get("action", "").strip()
+    if action not in ("accept", "reject"):
+        return Response({"error": "action must be 'accept' or 'reject'"}, status=status.HTTP_400_BAD_REQUEST)
+
+    if action == "reject":
+        offer.status = "rejected"
+        offer.save()
+        return Response({"offer": RequestSerializer(offer).data})
+
+    tutor_price = request.data.get("tutor_price")
+    if tutor_price is not None:
+        try:
+            tutor_price = float(tutor_price)
+        except (TypeError, ValueError):
+            return Response({"error": "tutor_price must be a number"}, status=status.HTTP_400_BAD_REQUEST)
+        if tutor_price <= 0:
+            return Response({"error": "tutor_price must be greater than zero"}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        tutor_price = float(offer.tutor_price)
 
     with transaction.atomic():
         offer.status = "accepted"
+        offer.tutor_price = round(tutor_price, 2)
         offer.save()
 
         offer.file.status = "matched"
@@ -70,15 +95,30 @@ def accept_offer(request, pk):
 
         Request.objects.filter(file=offer.file, status="pending").exclude(id=offer.id).update(status="rejected")
 
-        base = float(offer.tutor_price)
-        platform_fee = round(base * settings.PLATFORM_FEE, 2)
-        tutor_amount = round(base * (1 - settings.PLATFORM_FEE), 2)
+        student = offer.file.student
+        had_previous = Session.objects.filter(
+            request__file__student=student, request__tutor=request.user
+        ).exists()
 
-        session = Session.objects.create(
-            request=offer,
-            platform_fee=platform_fee,
-            tutor_amount=tutor_amount,
-        )
+        if not had_previous:
+            session = Session.objects.create(
+                request=offer,
+                platform_fee=0,
+                tutor_amount=0,
+                is_trial=True,
+                status=Session.Status.SCHEDULED,
+            )
+        else:
+            base = float(offer.tutor_price)
+            platform_fee = round(base * settings.PLATFORM_FEE, 2)
+            tutor_amount = round(base * (1 - settings.PLATFORM_FEE), 2)
+            session = Session.objects.create(
+                request=offer,
+                platform_fee=platform_fee,
+                tutor_amount=tutor_amount,
+                is_trial=False,
+                status=Session.Status.AWAITING_PAYMENT,
+            )
 
     return Response(
         {
@@ -88,6 +128,7 @@ def accept_offer(request, pk):
                 "platform_fee": session.platform_fee,
                 "tutor_amount": session.tutor_amount,
                 "status": session.status,
+                "is_trial": session.is_trial,
             },
         }
     )
@@ -96,18 +137,39 @@ def accept_offer(request, pk):
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
 def reject_offer(request, pk):
+    """Student declines a matched proposal so the file returns to the pool."""
     try:
         offer = Request.objects.get(id=pk, status="pending")
     except Request.DoesNotExist:
         return Response({"error": "Offer not found"}, status=status.HTTP_404_NOT_FOUND)
 
     if request.user != offer.file.student:
-        return Response({"error": "Only the file owner can reject offers"}, status=status.HTTP_403_FORBIDDEN)
+        return Response({"error": "Only the file owner can reject proposals"}, status=status.HTTP_403_FORBIDDEN)
 
     offer.status = "rejected"
     offer.save()
 
     return Response({"offer": RequestSerializer(offer).data})
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def complete_session(request, pk):
+    try:
+        session = Session.objects.get(id=pk, request__tutor=request.user)
+    except Session.DoesNotExist:
+        return Response({"error": "Session not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    if session.status != Session.Status.SCHEDULED:
+        return Response({"error": "Only scheduled sessions can be completed"}, status=status.HTTP_400_BAD_REQUEST)
+
+    with transaction.atomic():
+        session.status = Session.Status.DONE
+        session.save()
+        session.request.file.status = "done"
+        session.request.file.save()
+
+    return Response({"id": session.id, "status": session.status})
 
 
 @api_view(["GET"])

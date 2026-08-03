@@ -98,3 +98,34 @@ def calculate_price(country, session_type, estimated_hours, students=1, level="u
         "tutor_amount": tutor_amount,
         "currency": price["currency"],
     }
+
+
+def match_tutor(file_obj, proposed_price):
+    """Pick an approved, unbanned tutor for the file level and create an AI proposal.
+
+    Returns the matched tutor, or None if no tutor is available.
+    """
+    from django.contrib.auth import get_user_model
+    from offers.models import Request
+
+    User = get_user_model()
+    candidates = User.objects.filter(
+        role="tutor",
+        is_approved=True,
+        is_banned=False,
+        teaching_level=file_obj.education_level,
+    ).order_by("-is_available", "-last_seen")
+
+    tutor = candidates.first()
+    if not tutor:
+        return None
+
+    Request.objects.create(
+        file=file_obj,
+        tutor=tutor,
+        tutor_price=proposed_price,
+        is_ai_proposed=True,
+        payment_type="per_session",
+        status="pending",
+    )
+    return tutor

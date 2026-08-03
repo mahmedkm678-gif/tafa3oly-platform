@@ -50,7 +50,7 @@ export function renderQuranRequest() {
             <div class="form-row">
               <div class="form-group" style="flex:1"><label>عدد الحصص بالأسبوع</label><select id="sessionsPerWeek" required><option value="1">حصّة واحدة</option><option value="2">حصّتان</option><option value="3">3 حصص</option><option value="4">4 حصص</option><option value="5">5 حصص</option></select></div>
               <div class="form-group" style="flex:1"><label>مدة الحصة</label><select id="sessionDuration" required><option value="30">30 دقيقة</option><option value="45" selected>45 دقيقة</option><option value="60">ساعة</option><option value="90">ساعة ونص</option></select></div>
-              <div class="form-group" style="flex:1"><label>الدولة</label><select id="country" required><option value="SA">🇸🇦 السعودية</option><option value="KW">🇰🇼 الكويت</option><option value="AE">🇦🇪 الإمارات</option><option value="QA">🇶🇦 قطر</option><option value="BH">البحرين</option><option value="OM">عُمان</option></select></div>
+              <div class="form-group" style="flex:1"><label>الدولة</label><select id="country" required><option value="SA">🇸🇦 السعودية</option><option value="KW">🇰🇼 الكويت</option><option value="AE">🇦🇪 الإمارات</option><option value="QA">🇶🇦 قطر</option><option value="BH">البحرين</option><option value="OM">عُمان</option><option value="EG">🇪🇬 مصر</option></select></div>
             </div>
 
             <div class="section-title" style="margin-top:24px"><i class="fas fa-users"></i> نوع الجلسة</div>

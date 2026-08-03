@@ -10,8 +10,8 @@ class RequestAdmin(admin.ModelAdmin):
 
 @admin.register(Session)
 class SessionAdmin(admin.ModelAdmin):
-    list_display = ['id', 'request', 'platform_fee', 'tutor_amount', 'status', 'created_at']
-    list_filter = ['status']
+    list_display = ['id', 'request', 'platform_fee', 'tutor_amount', 'is_trial', 'status', 'created_at']
+    list_filter = ['status', 'is_trial']
 
 
 @admin.register(MemorizationProgress)

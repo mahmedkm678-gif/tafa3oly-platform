@@ -4,6 +4,8 @@ from django.views.static import serve
 from django.conf import settings
 from core import views
 
+FRONTEND_DIST = settings.BASE_DIR.parent / "frontend" / "dist"
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("users.urls")),
@@ -13,18 +15,18 @@ urlpatterns = [
     path("api/pricing/", views.pricing_view, name="pricing"),
     # Serve built SPA assets
     re_path(r"^assets/(?P<path>.*)$", serve, {
-        "document_root": settings.BASE_DIR / "frontend" / "dist" / "assets",
+        "document_root": FRONTEND_DIST / "assets",
     }),
     # Serve root-level static files from dist
     re_path(r"^(favicon\.svg|hero\.png|robots\.txt|sitemap\.xml)$", serve, {
-        "document_root": settings.BASE_DIR / "frontend" / "dist",
+        "document_root": FRONTEND_DIST,
     }),
     # Backward compat: serve frontend source files under /frontend/
     re_path(r"^frontend/(?P<path>.*)$", serve, {
-        "document_root": settings.BASE_DIR / "frontend",
+        "document_root": settings.BASE_DIR.parent / "frontend",
     }),
     # Catch-all: serve SPA index.html for all other routes (client-side routing)
     re_path(r"^.*$", serve, {
-        "document_root": settings.BASE_DIR / "frontend" / "dist", "path": "index.html",
+        "document_root": FRONTEND_DIST, "path": "index.html",
     }),
 ]

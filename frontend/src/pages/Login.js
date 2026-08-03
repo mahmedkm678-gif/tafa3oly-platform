@@ -2,14 +2,18 @@ import { $ } from '../utils.js'
 import { toast } from '../components/Toast.js'
 import { api } from '../api.js'
 import { isLoggedIn, isStudent } from '../auth.js'
+import { EagleSeal } from '../components/EagleSeal.js'
 
 export function renderLogin() {
   return `
     <div class="page" id="page-login" style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:100px 24px 40px">
-      <div class="glass-card" style="width:100%;max-width:420px;padding:28px">
-        <div class="logo" style="justify-content:center;margin-bottom:24px"><span class="logo-cap"><i class="fas fa-graduation-cap"></i></span> تفاعلي</div>
-        <h1 style="text-align:center;font-size:1.6rem;margin-bottom:6px">تسجيل دخول</h1>
-        <p style="text-align:center;color:var(--text-gray-muted);margin-bottom:28px;font-size:.9rem">أهلاً بعودتك! سجل دخولك للمتابعة</p>
+      <div class="glass-card" style="width:100%;max-width:420px;padding:32px;position:relative;overflow:hidden">
+        <div style="position:absolute;top:-20px;left:-20px;opacity:0.04;transform:rotate(-15deg)">${EagleSeal(120, false)}</div>
+        <div style="text-align:center;margin-bottom:28px;position:relative">
+          <img src="/logo.jpg" alt="تفاعلي" style="width:54px;height:54px;border-radius:10px;object-fit:cover;border:1px solid rgba(255,255,255,0.1);display:inline-block;">
+          <h1 style="font-family:var(--font-heading);font-size:1.5rem;margin-top:12px;margin-bottom:4px">تسجيل دخول</h1>
+          <p style="color:var(--text-gray-muted);font-size:.88rem">أهلاً بعودتك! سجل دخولك للمتابعة</p>
+        </div>
         <form id="loginForm">
           <div class="form-group"><label>البريد الإلكتروني أو اسم المستخدم</label><input type="text" id="loginEmail" required placeholder="ahmed@example.com"></div>
           <div class="form-group"><label>كلمة المرور</label><input type="password" id="loginPassword" required placeholder="********"></div>
@@ -17,7 +21,7 @@ export function renderLogin() {
           <button type="submit" class="btn btn-primary" style="width:100%" id="loginBtn">دخول</button>
         </form>
         <div style="display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--text-gray-muted);font-size:.8rem"><span style="flex:1;height:1px;background:rgba(255,255,255,0.06)"></span>أو<span style="flex:1;height:1px;background:rgba(255,255,255,0.06)"></span></div>
-        <div style="text-align:center;font-size:.9rem;color:var(--text-gray-muted)">ما عندك حساب؟ <a class="page-link" data-page="register" style="color:var(--accent-purple);font-weight:600;cursor:pointer">سجل الآن</a></div>
+        <div style="text-align:center;font-size:.9rem;color:var(--text-gray-muted)">ما عندك حساب؟ <a class="page-link" data-page="register" style="color:var(--red);font-weight:600;cursor:pointer">سجل الآن</a></div>
       </div>
     </div>
   `

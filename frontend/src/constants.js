@@ -1,4 +1,4 @@
-export const API_BASE = import.meta.env.VITE_API_BASE || 'https://mahmoudkaram326.pythonanywhere.com'
+export const API_BASE = import.meta.env.VITE_API_BASE || 'https://mahmoudkaram326.pythonanywhere.com/api'
 
 export const LEVELS_DATA = [
   { code: 'quran', label: 'القرآن الكريم', icon: 'fa-mosque' },
@@ -37,6 +37,7 @@ export const COUNTRY_DATA = [
   { code: 'QA', label: 'قطر', currency: 'QAR', symbol: 'ر.ق' },
   { code: 'BH', label: 'البحرين', currency: 'BHD', symbol: 'د.ب' },
   { code: 'OM', label: 'عُمان', currency: 'OMR', symbol: 'ر.ع' },
+  { code: 'EG', label: 'مصر', currency: 'EGP', symbol: 'ج.م' },
 ]
 
 export const COUNTRY_MAP = Object.fromEntries(COUNTRY_DATA.map(c => [c.code, c]))

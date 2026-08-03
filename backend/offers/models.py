@@ -16,6 +16,7 @@ class Request(models.Model):
     file = models.ForeignKey(File, on_delete=models.CASCADE, related_name='offers')
     tutor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tutor_offers')
     tutor_price = models.DecimalField(max_digits=10, decimal_places=2)
+    is_ai_proposed = models.BooleanField(default=False)
     payment_type = models.CharField(max_length=15, choices=PaymentType.choices, default=PaymentType.PER_SESSION)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -26,13 +27,15 @@ class Request(models.Model):
 
 class Session(models.Model):
     class Status(models.TextChoices):
+        AWAITING_PAYMENT = 'awaiting_payment', 'بانتظار الدفع'
         SCHEDULED = 'scheduled', 'Scheduled'
         DONE = 'done', 'Done'
 
     request = models.OneToOneField(Request, on_delete=models.CASCADE, related_name='session')
     platform_fee = models.DecimalField(max_digits=10, decimal_places=2)
     tutor_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=10, choices=Status.choices, default=Status.SCHEDULED)
+    is_trial = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.SCHEDULED)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

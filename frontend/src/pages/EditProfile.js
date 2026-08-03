@@ -18,7 +18,9 @@ export function renderEditProfile() {
             </div>
             <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="edEmail" required></div>
             <div class="form-group"><label>التخصص</label><input type="text" id="edSpecialization" placeholder="مثال: تحفيظ قرآن, رياضيات"></div>
-            <div class="form-group" id="edPaypalGroup"><label>بريد PayPal</label><input type="email" id="edPaypal" placeholder="tutor@paypal.com"></div>
+            <div class="form-group" id="edPayGroup"><label>رقم إنستاباي (للاستلام الشهري)</label><input type="tel" id="edInstapay" placeholder="01xxxxxxxxx"></div>
+            <div class="form-group" id="edVodafoneGroup"><label>رقم فودافون كاش (اختياري)</label><input type="tel" id="edVodafone" placeholder="01xxxxxxxxx"></div>
+            <p id="edApprovalNote" style="display:none;color:var(--gold);font-size:.8rem;line-height:1.8;margin-bottom:12px"></p>
             <div id="edTutorOnly">
               <div class="form-group"><label>سنوات الخبرة</label><input type="number" id="edExperience" min="0"></div>
               <div class="form-group"><label>المؤهل العلمي</label><input type="text" id="edEducation" placeholder="بكالوريوس..."></div>
@@ -46,7 +48,8 @@ export function initEditProfile() {
   if (role === 'student') {
     $('edTutorOnly').style.display = 'none'
     $('edStudentOnly').style.display = 'block'
-    $('edPaypalGroup').style.display = 'none'
+    $('edPayGroup').style.display = 'none'
+    $('edVodafoneGroup').style.display = 'none'
     const c = $('edStudentLevels')
     if (!c.children.length) {
       LEVELS_DATA.forEach(l => {
@@ -79,7 +82,8 @@ export function initEditProfile() {
       email: $('edEmail').value, specialization: $('edSpecialization').value
     }
     if (role === 'tutor') {
-      body.paypal_email = $('edPaypal').value
+      body.instapay_phone = $('edInstapay').value
+      body.vodafone_cash = $('edVodafone').value
       body.years_experience = $('edExperience').value || null
       body.education = $('edEducation').value
       body.certificates = $('edCertificates').value
@@ -109,10 +113,20 @@ async function loadProfile() {
     $('edLastName').value = u.last_name || ''
     $('edEmail').value = u.email || ''
     $('edSpecialization').value = u.specialization || ''
-    $('edPaypal').value = u.paypal_email || ''
+    $('edInstapay').value = u.instapay_phone || ''
+    $('edVodafone').value = u.vodafone_cash || ''
 
     const role = getRole()
     if (role === 'tutor') {
+      const note = $('edApprovalNote')
+      if (u.is_banned) {
+        note.style.display = 'block'
+        note.style.color = '#EF4444'
+        note.textContent = 'تم حظر حسابك. تواصل مع إدارة المنصة.'
+      } else if (!u.is_approved) {
+        note.style.display = 'block'
+        note.textContent = 'حسابك قيد مراجعة الإدارة ولن يظهر للطلاب حتى يتم اعتماده.'
+      }
       $('edExperience').value = u.years_experience || ''
       $('edEducation').value = u.education || ''
       $('edCertificates').value = u.certificates || ''

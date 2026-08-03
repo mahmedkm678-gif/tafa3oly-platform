@@ -13,14 +13,14 @@ class EducationLevel(models.TextChoices):
 
 
 class Language(models.TextChoices):
-    ENGLISH = 'english', 'الإنجليزية'
-    FRENCH = 'french', 'الفرنسية'
-    GERMAN = 'german', 'الألمانية'
-    SPANISH = 'spanish', 'الإسبانية'
-    ITALIAN = 'italian', 'الإيطالية'
-    TURKISH = 'turkish', 'التركية'
-    CHINESE = 'chinese', 'الصينية'
-    RUSSIAN = 'russian', 'الروسية'
+    ENGLISH = 'en', 'الإنجليزية'
+    FRENCH = 'fr', 'الفرنسية'
+    GERMAN = 'de', 'الألمانية'
+    SPANISH = 'es', 'الإسبانية'
+    ITALIAN = 'it', 'الإيطالية'
+    TURKISH = 'tr', 'التركية'
+    CHINESE = 'zh', 'الصينية'
+    RUSSIAN = 'ru', 'الروسية'
 
 
 class File(models.Model):

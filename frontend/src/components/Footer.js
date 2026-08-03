@@ -1,4 +1,5 @@
 import { LEVELS_DATA } from '../constants.js'
+import { EagleSealSm } from './EagleSeal.js'
 
 export function buildFooter(navigate) {
   const html = `
@@ -6,7 +7,7 @@ export function buildFooter(navigate) {
       <div class="container">
         <div class="footer-grid">
           <div class="footer-brand">
-            <div class="logo"><span class="logo-cap"><i class="fas fa-graduation-cap"></i></span> تفاعلي</div>
+            <div class="logo"><img src="/logo.jpg" alt="تفاعلي" style="width:32px;height:32px;border-radius:6px;object-fit:cover;border:1px solid rgba(255,255,255,0.1);"><span>تفاعلي</span></div>
             <p>منصة التعليم الذكية التي تجمع الطلاب والمدرسين في العالم العربي</p>
             <div class="social-links">
               <a class="social-icon" href="#"><i class="fab fa-twitter"></i></a>

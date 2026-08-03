@@ -4,13 +4,14 @@ import { toast } from '../components/Toast.js'
 import { LEVEL_MAP, LEVEL_ICONS } from '../constants.js'
 import { api } from '../api.js'
 import { getUser, isTutor } from '../auth.js'
-import { openModal, closeModal } from '../components/Modal.js'
+import { openModal, closeModal, createModalHTML } from '../components/Modal.js'
 import { Spinner } from '../components/Spinner.js'
 
 export function renderTutorDashboard() {
   return `
     <div class="page active" id="page-tutor-dashboard">
       <div class="container" style="padding-top:32px;padding-bottom:40px">
+        <div id="tdApprovalBanner"></div>
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px">
           <div>
             <h2 style="margin-bottom:4px">مرحباً، أ. <span class="gradient-text" id="tdUserName"></span></h2>
@@ -27,10 +28,11 @@ export function renderTutorDashboard() {
         </div>
       </div>
     </div>
+    ${createModalHTML('offerModal', '')}
+    ${createModalHTML('progressModal', '')}
   `
 }
 
-let tdCurrentFileId = null
 let tdCurrentSessionId = null
 let tdLevel = ''
 let tdInterval = null
@@ -42,6 +44,15 @@ export function initTutorDashboard() {
   tdLevel = u.teaching_level || 'quran'
   $('tdUserName').textContent = u.first_name || u.username
   $('tdLevel').textContent = 'مختص في: ' + (LEVEL_MAP[tdLevel] || tdLevel)
+
+  const banner = $('tdApprovalBanner')
+  if (banner) {
+    if (u.is_banned) {
+      banner.innerHTML = '<div class="card" style="padding:12px 16px;border:1px solid #EF4444;background:#FEF2F2;color:#B91C1C;margin-bottom:16px;font-size:.9rem">تم حظر حسابك بعد مراجعة شكاوى. تواصل مع إدارة المنصة.</div>'
+    } else if (!u.is_approved) {
+      banner.innerHTML = '<div class="card" style="padding:12px 16px;border:1px solid #F59E0B;background:#FFFBEB;color:#92400E;margin-bottom:16px;font-size:.9rem">حسابك قيد مراجعة الإدارة ولن تظهر لك الطلبات حتى يتم اعتمادك.</div>'
+    }
+  }
 
   const tb = $('tdTabs')
   tb.innerHTML = `<span class="tab active"><i class="fas ${LEVEL_ICONS[tdLevel] || 'fa-book'}"></i> ${LEVEL_MAP[tdLevel] || tdLevel}</span>`
@@ -57,33 +68,134 @@ export function initTutorDashboard() {
 
 function tdBuild() {
   $('tdContent').innerHTML = `
-    <h3>الملفات المتاحة — ${LEVEL_MAP[tdLevel]}</h3>
-    <div class="tdFiles" style="padding:20px 0">${Spinner()}</div>
-    <h3 style="margin-top:20px">عروضي المرسلة</h3>
+    <h3>طلبات مقترحة عليك — ${LEVEL_MAP[tdLevel]}</h3>
+    <p style="color:var(--text-muted);font-size:.82rem;margin-bottom:8px">اقترح عليك الذكاء الاصطناعي سعراً — أنت من يقرر: قبول أو تعديل السعر أو رفض.</p>
+    <div class="tdProposals" style="padding:20px 0">${Spinner()}</div>
+    <h3 style="margin-top:20px">سجل عروضي</h3>
     <div class="tdOffers" style="padding:20px 0">${Spinner()}</div>
     <h3 style="margin-top:20px">جلساتي النشطة</h3>
     <div class="tdSessions" style="padding:20px 0">${Spinner()}</div>
+    <h3 style="margin-top:20px">أرباحي الشهرية (85% من السعر — صرف شهري عبر إنستاباي/فودافون كاش)</h3>
+    <div class="tdEarnings" style="padding:20px 0">${Spinner()}</div>
   `
   tdLoad()
 }
 
 async function tdLoad() {
-  try { await Promise.all([tdLoadFiles(), tdLoadOffers(), tdLoadSessions()]) } catch { }
+  try { await Promise.all([tdLoadProposals(), tdLoadOffers(), tdLoadSessions(), tdLoadEarnings()]) } catch { }
 }
 
-async function tdLoadFiles() {
-  const el = document.querySelector('#tdContent .tdFiles')
+async function tdLoadEarnings() {
+  const el = document.querySelector('#tdContent .tdEarnings')
   if (!el) return
   try {
-    const f = await api('GET', '/files/?level=' + tdLevel)
-    if (!Array.isArray(f) || !f.length) { el.innerHTML = '<p class="empty">لا توجد ملفات متاحة</p>'; return }
-    el.innerHTML = `<div class="table-wrap"><table><tr><th>#</th><th>التفاصيل</th><th>النوع</th><th>السعر الأساسي</th><th>إجراء</th></tr>${f.map(x =>
-      `<tr><td>${x.id}</td><td>${esc(x.specialization || x.subject_type || tdLevel)}${x.difficulty ? ' · ' + esc(x.difficulty) : ''}</td><td>${x.session_type === 'solo' ? 'فردي' : 'مجموعة'}</td><td>${x.base_price || '—'} ${esc(x.currency || '')}</td><td><button class="btn btn-sm btn-primary offer-btn" data-fid="${x.id}" data-info="${esc(x.specialization || tdLevel)}">إرسال عرض</button></td></tr>`
-    ).join('')}</table></div>`
-    el.querySelectorAll('.offer-btn').forEach(btn => {
-      btn.addEventListener('click', () => tdOpenModal(parseInt(btn.dataset.fid), btn.dataset.info))
-    })
+    const r = await api('GET', '/payments/earnings/')
+    const totals = Object.entries(r.total_by_currency || {})
+    const pays = Array.isArray(r.payouts) ? r.payouts : []
+    let html = ''
+    if (!totals.length && !pays.length) {
+      el.innerHTML = '<p class="empty">لا توجد أرباح مدفوعة بعد</p>'
+      return
+    }
+    if (totals.length) {
+      html += `<div class="price-box" style="grid-template-columns:repeat(${Math.max(totals.length, 2)}, 1fr);display:grid;gap:12px">` +
+        totals.map(([cur, amt]) => `<div class="price-item"><div class="num">${amt} ${cur}</div><div class="lbl">أرباح الشهر (${r.month})</div></div>`).join('') +
+        `</div>`
+    }
+    if (pays.length) {
+      html += `<h4 style="margin:14px 0 8px">كشوف الصرف</h4><div class="table-wrap"><table><tr><th>#</th><th>الشهر</th><th>المبلغ</th><th>الطريقة</th><th>رقم الاستلام</th><th>الحالة</th></tr>` +
+        pays.map(p => `<tr><td>${p.id}</td><td>${esc(p.month_year)}</td><td>${p.amount} ${esc(p.currency)}</td><td>${p.method === 'instapay' ? 'إنستاباي' : 'فودافون كاش'}</td><td>${esc(p.recipient || '—')}</td><td><span class="badge badge-${esc(p.status)}">${esc(p.status)}</span></td></tr>`).join('') +
+        `</table></div>`
+    }
+    el.innerHTML = html
+  } catch { el.innerHTML = '<p class="empty">خطأ في تحميل الأرباح</p>' }
+}
+
+async function tdLoadProposals() {
+  const el = document.querySelector('#tdContent .tdProposals')
+  if (!el) return
+  try {
+    const r = await api('GET', '/offers/')
+    const pending = Array.isArray(r) ? r.filter(o => o.status === 'pending') : []
+    if (!pending.length) { el.innerHTML = '<p class="empty">لا توجد طلبات مقترحة حالياً</p>'; return }
+    el.innerHTML = pending.map(o => `
+      <div class="session-card" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div>
+            <strong>${esc(o.file?.specialization || o.file?.subject_type || tdLevel)}</strong>
+            ${o.is_ai_proposed ? ' <span class="badge badge-matched" style="font-size:.7rem">اقتراح ذكاء اصطناعي</span>' : ''}
+            <div style="color:var(--text-muted);font-size:.82rem;margin-top:4px">
+              الصعوبة: ${esc(o.file?.difficulty || '—')} · السعر المقترح: <strong>${o.tutor_price} ${esc(o.file?.currency || '')}</strong> · ${o.payment_type === 'monthly' ? 'شهري' : 'بالحصة'}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+          <button class="btn btn-sm btn-success td-accept-btn" data-id="${o.id}">قبول السعر</button>
+          <button class="btn btn-sm btn-secondary td-modify-btn" data-id="${o.id}">تعديل السعر</button>
+          <button class="btn btn-sm btn-ghost td-reject-btn" data-id="${o.id}">رفض</button>
+        </div>
+      </div>
+    `).join('')
+    el.querySelectorAll('.td-accept-btn').forEach(b => b.addEventListener('click', () => tdRespond(parseInt(b.dataset.id), 'accept')))
+    el.querySelectorAll('.td-modify-btn').forEach(b => b.addEventListener('click', () => tdOpenModify(parseInt(b.dataset.id))))
+    el.querySelectorAll('.td-reject-btn').forEach(b => b.addEventListener('click', () => tdRespond(parseInt(b.dataset.id), 'reject')))
   } catch { el.innerHTML = '<p class="empty">خطأ في التحميل</p>' }
+}
+
+async function tdRespond(id, action) {
+  if (action === 'reject') {
+    const ok = await window.confirm('رفض هذا الاقتراح؟ سيُبحث عن مدرس آخر لهذا الطالب.')
+    if (!ok) return
+  }
+  try {
+    const r = await api('PUT', '/offers/' + id + '/respond/', { action })
+    toast(action === 'accept' ? 'تم قبول الاقتراح ✓' : 'تم رفض الاقتراح', action === 'accept' ? 'success' : 'info')
+    if (action === 'accept' && r.session?.is_trial) {
+      toast('أول جلسة مع هذا الطالب مجانية ✓', 'success')
+    }
+    tdLoad()
+  } catch (e) {
+    toast('خطأ: ' + (e.data?.error || e.message), 'error')
+  }
+}
+
+let tdRespondId = null
+
+function tdOpenModify(id) {
+  tdRespondId = id
+  const content = `
+    <h3>تعديل السعر المقترح</h3>
+    <p style="color:var(--text-muted);margin-bottom:12px;font-size:.9rem">حدد السعر الذي يرضيك، وسيُعتمد إذا قبلته:</p>
+    <div class="form-group"><label>سعرك الجديد</label><input type="number" id="modalNewPrice" step="0.01" min="1"></div>
+    <div class="modal-btns">
+      <button class="btn btn-primary" id="submitModifyBtn">اعتماد السعر الجديد</button>
+      <button class="btn btn-ghost" id="closeModifyBtn">إلغاء</button>
+    </div>
+    <p id="modifyError" style="color:#EF4444;font-size:.85rem;margin-top:8px;display:none"></p>
+  `
+  $('offerModal').querySelector('.modal').innerHTML = content
+  openModal('offerModal')
+
+  $('submitModifyBtn').addEventListener('click', submitModify)
+  $('closeModifyBtn').addEventListener('click', () => closeModal('offerModal'))
+}
+
+async function submitModify() {
+  const p = $('modalNewPrice').value
+  if (!p || p <= 0) {
+    $('modifyError').textContent = 'أدخل سعراً صحيحاً'
+    $('modifyError').style.display = 'block'
+    return
+  }
+  try {
+    await api('PUT', '/offers/' + tdRespondId + '/respond/', { action: 'accept', tutor_price: p })
+    toast('تم اعتماد السعر الجديد ✓', 'success')
+    closeModal('offerModal')
+    tdLoad()
+  } catch (e) {
+    $('modifyError').textContent = e.data?.error || e.message
+    $('modifyError').style.display = 'block'
+  }
 }
 
 async function tdLoadOffers() {
@@ -101,21 +213,27 @@ async function tdLoadSessions() {
   if (!el) return
   try {
     const r = await api('GET', '/offers/')
-    const ac = Array.isArray(r) ? r.filter(o => o.status === 'accepted') : []
+    const ac = Array.isArray(r) ? r.filter(o => o.status === 'accepted' && o.session_id) : []
     if (!ac.length) { el.innerHTML = '<p class="empty">لا توجد جلسات نشطة</p>'; return }
-    el.innerHTML = ac.map(o => `
+    el.innerHTML = ac.map(o => {
+      const trial = o.session_is_trial
+      const paid = o.session_status === 'scheduled' || o.session_status === 'done'
+      const stateTxt = trial ? '<span class="badge badge-matched">جلسة مجانية (أول مرة)</span>' : paid ? '<span class="badge badge-active">مدفوعة</span>' : '<span class="badge badge-warning">في انتظار دفع الطالب</span>'
+      return `
       <div class="session-card">
         <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px">
           <div>
-            <strong>💰 ${o.tutor_price} ${o.file?.currency || ''} · ${o.payment_type === 'monthly' ? 'شهري' : 'بالحصة'}</strong>
+            <strong>${o.tutor_price} ${o.file?.currency || ''} · ${o.payment_type === 'monthly' ? 'شهري' : 'بالحصة'}</strong>
+            ${stateTxt}
             ${o.file?.current_juz ? '<div style="color:var(--text-muted);font-size:.82rem">الجزء ' + o.file.current_juz + ' ← ' + o.file.start_juz + '</div>' : ''}
           </div>
-          <button class="btn btn-sm btn-success progress-btn" data-sid="${o.id}">تسجيل تقدم</button>
+          <button class="btn btn-sm btn-success progress-btn" data-sid="${o.session_id}">تسجيل تقدم</button>
         </div>
-        <div id="tdSessProg-${o.id}" style="margin-top:8px"></div>
+        <div id="tdSessProg-${o.session_id}" style="margin-top:8px"></div>
       </div>
-    `).join('')
-    ac.forEach(o => tdLoadSessProg(o.id))
+    `
+    }).join('')
+    ac.forEach(o => tdLoadSessProg(o.session_id))
     el.querySelectorAll('.progress-btn').forEach(btn => {
       btn.addEventListener('click', () => tdOpenProgress(parseInt(btn.dataset.sid)))
     })
@@ -133,44 +251,6 @@ async function tdLoadSessProg(sid) {
       return `<div class="progress-row"><strong>${ft}</strong> <span style="color:var(--text-muted);font-size:.8rem">${new Date(e.created_at).toLocaleDateString('ar')}</span>${e.tutor_notes ? '<div>📝 ' + esc(e.tutor_notes) + '</div>' : ''}</div>`
     }).join('')
   } catch { }
-}
-
-function tdOpenModal(fid, info) {
-  tdCurrentFileId = fid
-  const content = `
-    <h3>إرسال عرض سعر</h3>
-    <p id="modalFileInfo" style="color:var(--text-muted);margin-bottom:12px;font-size:.9rem">${esc(info)}</p>
-    <div class="form-group"><label>سعرك</label><input type="number" id="modalPrice" step="0.01" min="1"></div>
-    <div class="form-group"><label>نوع الدفع</label><select id="modalPaymentType"><option value="per_session">بالحصة</option><option value="monthly">شهري</option></select></div>
-    <div class="modal-btns">
-      <button class="btn btn-primary" id="submitOfferBtn">إرسال العرض</button>
-      <button class="btn btn-ghost" id="closeOfferBtn">إلغاء</button>
-    </div>
-    <p id="modalError" style="color:#EF4444;font-size:.85rem;margin-top:8px;display:none"></p>
-  `
-  $('offerModal').querySelector('.modal').innerHTML = content
-  openModal('offerModal')
-
-  $('submitOfferBtn').addEventListener('click', submitOffer)
-  $('closeOfferBtn').addEventListener('click', () => closeModal('offerModal'))
-}
-
-async function submitOffer() {
-  const p = $('modalPrice').value, pt = $('modalPaymentType').value
-  if (!p || p <= 0) {
-    $('modalError').textContent = 'أدخل سعراً صحيحاً'
-    $('modalError').style.display = 'block'
-    return
-  }
-  try {
-    await api('POST', '/offers/create/', { file_id: tdCurrentFileId, tutor_price: p, payment_type: pt })
-    toast('تم إرسال العرض', 'success')
-    closeModal('offerModal')
-    tdLoad()
-  } catch (e) {
-    $('modalError').textContent = e.data?.error || e.message
-    $('modalError').style.display = 'block'
-  }
 }
 
 function tdOpenProgress(sid) {

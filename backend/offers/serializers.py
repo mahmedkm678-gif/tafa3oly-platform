@@ -7,24 +7,46 @@ from .models import Request, Session, MemorizationProgress, Review
 class RequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Request
-        fields = ['id', 'file', 'tutor', 'tutor_price', 'payment_type', 'status', 'created_at']
+        fields = ['id', 'file', 'tutor', 'tutor_price', 'is_ai_proposed', 'payment_type', 'status', 'created_at']
         read_only_fields = ['id', 'status', 'created_at']
 
 
 class RequestDetailSerializer(serializers.ModelSerializer):
     tutor = UserSerializer(read_only=True)
     file = FileSerializer(read_only=True)
+    session_id = serializers.SerializerMethodField()
+    session_status = serializers.SerializerMethodField()
+    session_is_trial = serializers.SerializerMethodField()
 
     class Meta:
         model = Request
-        fields = ['id', 'file', 'tutor', 'tutor_price', 'payment_type', 'status', 'created_at']
+        fields = [
+            'id', 'file', 'tutor', 'tutor_price', 'is_ai_proposed',
+            'payment_type', 'status', 'created_at',
+            'session_id', 'session_status', 'session_is_trial',
+        ]
+
+    def get_session_id(self, obj):
+        if hasattr(obj, 'session'):
+            return obj.session.id
+        return None
+
+    def get_session_status(self, obj):
+        if hasattr(obj, 'session'):
+            return obj.session.status
+        return None
+
+    def get_session_is_trial(self, obj):
+        if hasattr(obj, 'session'):
+            return obj.session.is_trial
+        return None
 
 
 class SessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Session
-        fields = ['id', 'request', 'platform_fee', 'tutor_amount', 'status', 'created_at']
-        read_only_fields = ['id', 'platform_fee', 'tutor_amount', 'created_at']
+        fields = ['id', 'request', 'platform_fee', 'tutor_amount', 'is_trial', 'status', 'created_at']
+        read_only_fields = ['id', 'platform_fee', 'tutor_amount', 'is_trial', 'created_at']
 
 
 class ProgressSerializer(serializers.ModelSerializer):

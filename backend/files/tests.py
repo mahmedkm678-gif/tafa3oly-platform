@@ -17,7 +17,8 @@ class FileAPITests(APITestCase):
         self.tutor = User.objects.create_user(
             username="tutor1", email="t1@test.com",
             password="pass12345", role="tutor",
-            teaching_level="university"
+            teaching_level="university",
+            is_approved=True,
         )
         self.student_token = Token.objects.create(user=self.student).key
         self.tutor_token = Token.objects.create(user=self.tutor).key

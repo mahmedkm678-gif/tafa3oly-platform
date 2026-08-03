@@ -1,4 +1,5 @@
 import { getUser, isLoggedIn, isStudent, isTutor, logout as authLogout } from '../auth.js'
+import { EagleSealSm } from './EagleSeal.js'
 
 let _navbarClickHandler = null
 
@@ -26,7 +27,8 @@ export function buildNavbar(navigate) {
       <div class="container">
         <div class="nav-wrapper">
           <div class="logo" data-page="home">
-            <span class="logo-cap"><i class="fas fa-graduation-cap"></i></span> تفاعلي
+            <img src="/logo.jpg" alt="تفاعلي" style="width:32px;height:32px;border-radius:6px;object-fit:cover;border:1px solid rgba(255,255,255,0.1);">
+            <span>تفاعلي</span>
           </div>
           <ul class="nav-menu" id="navMenu" role="navigation">${links}</ul>
           <div class="nav-actions">${actions}</div>
