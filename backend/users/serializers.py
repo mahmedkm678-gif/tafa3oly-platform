@@ -3,6 +3,8 @@ from .models import User, Complaint
 
 
 class UserSerializer(serializers.ModelSerializer):
+    average_rating = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
@@ -12,8 +14,15 @@ class UserSerializer(serializers.ModelSerializer):
             'profile_picture_url', 'bio', 'years_experience',
             'education', 'certificates', 'is_available',
             'teaching_level', 'languages', 'student_levels', 'created_at',
+            'average_rating',
         ]
         read_only_fields = ['id', 'created_at', 'is_approved', 'is_banned']
+
+    def get_average_rating(self, obj):
+        from django.db.models import Avg
+        from offers.models import Review
+        avg = Review.objects.filter(tutor=obj).aggregate(a=Avg("rating"))["a"]
+        return round(float(avg), 1) if avg is not None else None
 
 
 class RegisterSerializer(serializers.ModelSerializer):

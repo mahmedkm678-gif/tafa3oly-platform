@@ -1,6 +1,7 @@
 import { toast } from '../components/Toast.js'
-import { COUNTRY_DATA } from '../constants.js'
+import { COUNTRY_DATA, LEVEL_MAP } from '../constants.js'
 import { api } from '../api.js'
+import { esc } from '../utils.js'
 import { EagleSeal } from '../components/EagleSeal.js'
 
 const HOME_LEVELS = [
@@ -68,9 +69,8 @@ export function renderHome() {
               ارفع ملفاً لا تفهمه، يحلله الذكاء الاصطناعي ويقترح السعر ويرشّح مدرساً — المدرس يؤكد السعر النهائي، وأول جلسة مجانية
             </p>
             <div style="display:flex;gap:12px;flex-wrap:wrap">
-              <button class="btn btn-primary btn-shine page-btn" data-page="register"><i class="fas fa-rocket"></i> ابدأ مجاناً</button>
-              <button class="btn btn-secondary page-btn" data-page="quran-request"><i class="fas fa-mosque"></i> تحفيظ قرآن</button>
-              <button class="btn btn-secondary page-btn" data-page="register"><i class="fas fa-university"></i> للجامعات</button>
+              <button class="btn btn-primary btn-shine page-btn" data-page="upload-request"><i class="fas fa-cloud-upload-alt"></i> ارفع ملفك دلوقتي</button>
+              <button class="btn btn-secondary page-btn" data-page="register"><i class="fas fa-user-graduate"></i> سجّل كمدرس</button>
             </div>
           </div>
           <div class="hero-seal-wrap">
@@ -94,6 +94,11 @@ export function renderHome() {
       <!-- ===== HOW IT WORKS ===== -->
       <section style="padding:60px 0;border-top:1px solid rgba(255,255,255,0.03)">
         <div class="container">
+          <div class="reveal" style="margin-bottom:32px">
+            <span style="font-family:var(--font-heading);color:var(--gold);font-size:.9rem;display:block;margin-bottom:8px">ازاي بيشتغل</span>
+            <h2 class="text-reveal" style="font-family:var(--font-heading);font-size:1.8rem;margin-bottom:8px"><span class="text-reveal-inner">3 خطوات <span class="gradient-text">تبدأ بيها</span></span></h2>
+            <p style="color:var(--text-gray-muted);font-size:.9rem">وفي الصفحات التفصيلية هتلاقي كل تفاصيل الخطوات للطلاب والمدرسين</p>
+          </div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;align-items:stretch">
             <div class="reveal" style="padding:32px;border-left:1px solid rgba(255,255,255,0.04)">
               <div style="font-family:var(--font-latin);font-size:2.5rem;font-weight:800;color:var(--red);opacity:0.2;margin-bottom:12px">01</div>
@@ -113,6 +118,10 @@ export function renderHome() {
               <h4 style="font-family:var(--font-heading);font-size:1.1rem;margin-bottom:8px">المدرس يقرر</h4>
               <p style="color:var(--text-gray-muted);font-size:.85rem;line-height:1.7">يؤكد المدرس السعر المقترح أو يعدّله، وأول جلسة مجانية</p>
             </div>
+          </div>
+          <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:40px">
+            <button class="btn btn-secondary page-btn" data-page="how-it-works?role=student"><i class="fas fa-user-graduate"></i> ازاي بيشتغل للطلاب</button>
+            <button class="btn btn-secondary page-btn" data-page="how-it-works?role=tutor"><i class="fas fa-chalkboard-teacher"></i> ازاي بيشتغل للمدرسين</button>
           </div>
         </div>
       </section>
@@ -221,6 +230,18 @@ export function renderHome() {
         </div>
       </section>
 
+      <!-- ===== AVAILABLE TUTORS ===== -->
+      <section style="padding:60px 0;border-top:1px solid rgba(255,255,255,0.03)">
+        <div class="container">
+          <div class="reveal" style="margin-bottom:28px">
+            <span style="font-family:var(--font-heading);color:var(--gold);font-size:.9rem;display:block;margin-bottom:8px">متاحون الآن</span>
+            <h2 class="text-reveal" style="font-family:var(--font-heading);font-size:1.8rem;margin-bottom:8px"><span class="text-reveal-inner">مدرّسون <span class="gradient-text">متاحون</span></span></h2>
+            <p style="color:var(--text-gray-muted);font-size:.9rem">مدرّسون معتمدون جاهزون لبدء جلساتك — أول جلسة مجانية</p>
+          </div>
+          <div id="homeTutors" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px"></div>
+        </div>
+      </section>
+
       <!-- ===== CONTACT ===== -->
       <section style="padding:60px 0;border-top:1px solid rgba(255,255,255,0.03)">
         <div class="container" style="max-width:560px">
@@ -285,6 +306,7 @@ export function renderHome() {
 export function initHome() {
   initTypewriter()
   initPricing()
+  initHomeTutors()
   const f = document.getElementById('contactForm')
   if (f) {
     f.addEventListener('submit', async e => {
@@ -335,6 +357,33 @@ async function initPricing() {
 
   await loadPrices()
   sel.addEventListener('change', loadPrices)
+}
+
+function initHomeTutors() {
+  const wrap = document.getElementById('homeTutors')
+  if (!wrap) return
+  api('GET', '/tutors/')
+    .then(r => {
+      const list = Array.isArray(r) ? r.slice(0, 4) : []
+      if (!list.length) {
+        wrap.innerHTML = '<p class="empty">لا يوجد مدرّسون متاحون الآن — عد لاحقاً</p>'
+        return
+      }
+      wrap.innerHTML = list.map(t => `
+        <div class="level-card page-btn" data-page="tutor-profile?id=${t.id}" style="background:var(--bg-dark-card);border:var(--border-glass);border-radius:var(--radius-lg);padding:20px;cursor:pointer;position:relative;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+            <img src="${esc(t.profile_picture_url || '')}" onerror="this.style.display='none'" alt="" style="width:52px;height:52px;border-radius:50%;object-fit:cover">
+            <div>
+              <div style="font-weight:700;font-size:.95rem">أ. ${esc(t.first_name || '')} ${esc(t.last_name || '')}</div>
+              <div style="color:var(--text-muted);font-size:.78rem">${esc(LEVEL_MAP[t.teaching_level] || t.teaching_level || '')}</div>
+            </div>
+          </div>
+          <div style="color:var(--text-gray-muted);font-size:.82rem;line-height:1.7">${esc(t.specialization || '')}${t.years_experience ? ' · ' + esc(String(t.years_experience)) + ' سنة' : ''}</div>
+          <div style="margin-top:12px;color:var(--gold);font-size:.78rem"><i class="fas fa-circle" style="font-size:.4rem;vertical-align:middle;margin-left:4px"></i> متاح الآن — أول جلسة مجانية</div>
+        </div>
+      `).join('')
+    })
+    .catch(() => { wrap.innerHTML = '<p class="empty">تعذر تحميل المدرسين</p>' })
 }
 
 const _typewriterTimers = []

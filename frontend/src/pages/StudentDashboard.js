@@ -1,10 +1,10 @@
-import { $, esc } from '../utils.js'
+import { $ } from '../utils.js'
 import { toast } from '../components/Toast.js'
 import { LEVELS_DATA, LANG_DATA, LEVEL_MAP, LEVEL_ICONS, DAYS } from '../constants.js'
 import { api } from '../api.js'
 import { getUser, isStudent } from '../auth.js'
-import { loadFiles, loadTutors, loadProgress, loadOffers, loadTutorProfile } from '../utils/dashboardShared.js'
-import { closeModal } from '../components/Modal.js'
+import { loadFiles, loadTutors, loadProgress, loadOffers } from '../utils/dashboardShared.js'
+import { openReviewForm } from './ReviewForm.js'
 import { confirmDialog } from '../components/ConfirmDialog.js'
 import { Spinner } from '../components/Spinner.js'
 
@@ -25,8 +25,10 @@ export function renderStudentDashboard() {
 
 let sdActiveLevel = ''
 let sdInterval = null
+let sdNavigate = null
 
-export async function initStudentDashboard() {
+export async function initStudentDashboard(navigate) {
+  sdNavigate = navigate || sdNavigate
   if (!isStudent()) return
   const u = getUser()
   $('sdUserName').textContent = u.first_name || u.username
@@ -233,24 +235,108 @@ function sdBuildAcademic(level, cont) {
 async function sdLoad(level) {
   try {
     await Promise.all([
-      loadFiles(document.querySelector('#sdContent .sdFiles'), level),
-      loadTutors(document.querySelector('#sdContent .sdTutors'), level, showTutorModal),
+      loadFiles(
+        document.querySelector('#sdContent .sdFiles'),
+        level,
+        sdNavigate ? (id) => sdNavigate('offer-detail?file_id=' + id) : undefined
+      ),
+      loadTutors(document.querySelector('#sdContent .sdTutors'), level, (id) => sdNavigate('tutor-profile?id=' + id)),
       loadProgress(document.querySelector('#sdContent .sdProgress')),
-      loadOffers(document.querySelector('#sdContent .sdOffers'), handleRejectOffer, handlePay),
+      loadOffers(document.querySelector('#sdContent .sdOffers'), handleRejectOffer, handlePay, (sid, tutorName) => openReviewForm({ sessionId: sid, tutorName, onSuccess: () => sdLoad(sdActiveLevel) })),
     ])
   } catch { }
 }
 
 async function handlePay(sid, amount, currency) {
-  const ok = await confirmDialog(`تأكيد دفع ${amount} ${currency} عبر PayPal؟ سيتم تحويلك إلى PayPal لإتمام الدفع.`)
-  if (!ok) return
+  showPaymentModal(sid, amount, currency)
+}
+
+function showPaymentModal(sid, amount, currency) {
+  const overlay = document.createElement('div')
+  overlay.className = 'modal-overlay'
+  overlay.id = 'payModal'
+  overlay.onclick = function (e) { if (e.target === this) this.remove() }
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:480px">
+      <h3 style="margin-bottom:6px">اختر طريقة الدفع</h3>
+      <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:16px">المبلغ المطلوب: <strong>${amount} ${currency}</strong></p>
+      <div id="payMethodList" style="display:grid;gap:10px">
+        <button class="btn btn-ghost pay-method-btn" data-method="paypal" style="display:flex;align-items:center;gap:10px;justify-content:center"><i class="fas fa-credit-card"></i> الدفع عبر PayPal (بطاقة دولية)</button>
+        <button class="btn btn-ghost pay-method-btn" data-method="instapay" style="display:flex;align-items:center;gap:10px;justify-content:center"><i class="fas fa-mobile-alt"></i> تحويل عبر إنستاباي</button>
+        <button class="btn btn-ghost pay-method-btn" data-method="vodafone_cash" style="display:flex;align-items:center;gap:10px;justify-content:center"><i class="fas fa-mobile-alt"></i> تحويل عبر فودافون كاش</button>
+      </div>
+      <div id="payManualBox" class="hidden" style="margin-top:14px"></div>
+      <button class="btn btn-ghost" id="payCloseBtn" style="width:100%;margin-top:14px">إلغاء</button>
+    </div>
+  `
+  document.body.appendChild(overlay)
+  overlay.querySelector('#payCloseBtn').addEventListener('click', () => overlay.remove())
+  overlay.querySelectorAll('.pay-method-btn').forEach(btn => {
+    btn.addEventListener('click', () => startPayment(sid, amount, currency, btn.dataset.method, overlay))
+  })
+}
+
+async function startPayment(sid, amount, currency, method, overlay) {
+  const list = overlay.querySelector('#payMethodList')
+  const box = overlay.querySelector('#payManualBox')
+
+  if (method === 'paypal') {
+    const ok = await confirmDialog(`تأكيد دفع ${amount} ${currency} عبر PayPal؟ سيتم تحويلك إلى PayPal لإتمام الدفع.`)
+    if (!ok) return
+    try {
+      const base = window.location.origin + '/student-dashboard'
+      const d = await api('POST', '/payments/create/', { session_id: sid, return_url: base, cancel_url: base })
+      window.location.href = d.approval_url
+    } catch (e) {
+      toast('خطأ: ' + (e.data?.error || e.message), 'error')
+    }
+    return
+  }
+
+  let createRes
   try {
-    const base = window.location.origin + '/student-dashboard'
-    const d = await api('POST', '/payments/create/', { session_id: sid, return_url: base, cancel_url: base })
-    window.location.href = d.approval_url
+    createRes = await api('POST', '/payments/create/', { session_id: sid, payment_method: method })
   } catch (e) {
     toast('خطأ: ' + (e.data?.error || e.message), 'error')
+    return
   }
+
+  const pid = createRes.payment.id
+  const recipient = createRes.recipient || ''
+
+  list.classList.add('hidden')
+  box.classList.remove('hidden')
+  box.innerHTML = `
+    <div style="padding:14px;background:rgba(255,255,255,.04);border-radius:10px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>المبلغ</span><strong>${amount} ${currency}</strong></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>تحوّل إلى</span><strong dir="ltr">${recipient}</strong></div>
+      <div style="display:flex;justify-content:space-between"><span>المحفظة</span><strong>${method === 'instapay' ? 'إنستاباي' : 'فودافون كاش'}</strong></div>
+    </div>
+    <form id="payManualForm">
+      <div class="form-group"><label>رقم المرجع من عملية التحويل</label><input type="text" name="reference_number" required placeholder="مثال: 123456789"></div>
+      <div class="form-group"><label>صورة الإيصال (سكرين شوت)</label><input type="file" name="receipt" accept="image/*" required style="width:100%"></div>
+      <button type="submit" class="btn btn-primary" style="width:100%">إرسال للاعتماد اليدوي</button>
+    </form>
+    <p style="color:var(--text-muted);font-size:.8rem;margin-top:8px">سيقوم فريقنا بالتحقق من التحويل وتفعيل الجلسة خلال ساعات العمل.</p>
+  `
+  box.querySelector('#payManualForm').addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const form = e.target
+    const btn = form.querySelector('button')
+    btn.disabled = true; btn.textContent = 'جاري الإرسال...'
+    try {
+      const fd = new FormData(form)
+      fd.append('payment_id', pid)
+      await api('POST', '/payments/receipt/', fd)
+      overlay.remove()
+      toast('تم استلام بيانات التحويل — الدفع قيد المراجعة', 'success')
+      sdLoad(sdActiveLevel)
+    } catch (err) {
+      toast('خطأ: ' + (err.data?.error || err.message), 'error')
+    } finally {
+      btn.disabled = false; btn.textContent = 'إرسال للاعتماد اليدوي'
+    }
+  })
 }
 
 async function handleRejectOffer(id) {
@@ -263,22 +349,6 @@ async function handleRejectOffer(id) {
   } catch (e) {
     toast('خطأ: ' + (e.data?.error || e.message), 'error')
   }
-}
-
-async function showTutorModal(id) {
-  const modalContent = $('tutorModalContent') || buildTutorModal()
-  await loadTutorProfile(id, modalContent, () => closeModal('tutorModal'))
-  $('tutorModal')?.classList.add('active')
-}
-
-function buildTutorModal() {
-  const div = document.createElement('div')
-  div.className = 'modal-overlay'
-  div.id = 'tutorModal'
-  div.onclick = function (e) { if (e.target === this) this.classList.remove('active') }
-  div.innerHTML = '<div class="modal" id="tutorModalContent"></div>'
-  document.body.appendChild(div)
-  return document.getElementById('tutorModalContent')
 }
 
 export function cleanupStudentDashboard() {

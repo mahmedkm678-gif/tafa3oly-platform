@@ -14,6 +14,11 @@ const PAGE_TITLES = {
   'privacy': 'سياسة الخصوصية — تفاعلي',
   'terms': 'الشروط والأحكام — تفاعلي',
   'faq': 'الأسئلة الشائعة — تفاعلي',
+  'upload-request': 'ارفع ملفك — تفاعلي',
+  'how-it-works': 'ازاي بتشتغل تفاعلي — تفاعلي',
+  'offer-detail': 'تفاصيل الطلب والعروض — تفاعلي',
+  'tutor-profile': 'بروفايل المدرس — تفاعلي',
+  'payment': 'الدفع — تفاعلي',
   '404': 'الصفحة غير موجودة — تفاعلي',
 }
 
@@ -58,6 +63,26 @@ const PAGE_METAS = {
     description: 'الأسئلة الشائعة حول منصة تفاعلي — كيف تبدأ، الدفع، المدفوعات، والمزيد.',
     canonical: 'https://tafa3oly.com/faq',
   },
+  'upload-request': {
+    description: 'ارفع ملفك على منصة تفاعلي ليحلله الذكاء الاصطناعي ويرشّح لك مدرساً متخصصاً في مستواك.',
+    canonical: 'https://tafa3oly.com/upload-request',
+  },
+  'how-it-works': {
+    description: 'ازاي بتشتغل تفاعلي للطلاب والمدرسين — ارفع ملفك، يحلله الذكاء الاصطناعي، يرشحلك مدرساً، وتختار من عروض المدرسين.',
+    canonical: 'https://tafa3oly.com/how-it-works',
+  },
+  'offer-detail': {
+    description: 'تفاصيل طلبك وعروض المدرسين — قارن الأسعار والتقييمات واقبل العرض اللي يناسبك على منصة تفاعلي.',
+    canonical: 'https://tafa3oly.com/offer-detail',
+  },
+  'payment': {
+    description: 'أكمل دفعك بأمان على منصة تفاعلي — بايبال أو إنستاباي أو فودافون كاش.',
+    canonical: 'https://tafa3oly.com/payment',
+  },
+  'tutor-profile': {
+    description: 'بروفايل المدرس على منصة تفاعلي — التخصص، المؤهلات، الخبرة، وتقييمات الطلاب. أول جلسة مجانية.',
+    canonical: 'https://tafa3oly.com/tutor-profile',
+  },
   '404': {
     description: 'الصفحة التي تبحث عنها غير موجودة. عُد إلى الصفحة الرئيسية لمنصة تفاعلي.',
     canonical: 'https://tafa3oly.com/',
@@ -84,13 +109,17 @@ export class Router {
 
   _pageFromPath() {
     const path = location.pathname.replace(/^\//, '')
-    return path || 'home'
+    const q = location.search ? location.search.slice(1) : ''
+    const p = path || 'home'
+    return q ? p + '?' + q : p
   }
 
   _doNavigate(page, pushState = true) {
-    if (page === this.currentPage) return
+    const [routeKey, query] = String(page || 'home').split('?')
+    const fullKey = query ? routeKey + '?' + query : routeKey
+    if (fullKey === this.currentPage) return
 
-    if (!this.routes[page] && page !== 'home') {
+    if (!this.routes[routeKey] && routeKey !== 'home') {
       this._doNavigate('404', pushState)
       return
     }
@@ -100,32 +129,35 @@ export class Router {
       'tutor-dashboard': isTutor,
       'edit-profile': isLoggedIn,
       'quran-request': isLoggedIn,
+      'upload-request': isLoggedIn,
+      'offer-detail': isLoggedIn,
+      'payment': isLoggedIn,
     }
 
-    const guard = guards[page]
+    const guard = guards[routeKey]
     if (guard && !guard()) {
       this._doNavigate('login', pushState)
       return
     }
 
-    if ((page === 'login' || page === 'register') && isLoggedIn()) {
+    if ((routeKey === 'login' || routeKey === 'register') && isLoggedIn()) {
       this._doNavigate(isStudent() ? 'student-dashboard' : 'tutor-dashboard', pushState)
       return
     }
 
     const prevPage = this.currentPage
-    this.currentPage = page
+    this.currentPage = fullKey
 
-    const prevRoute = this.routes[prevPage]
+    const prevRoute = this.routes[prevPage ? prevPage.split('?')[0] : '']
     if (prevRoute?.cleanup) {
       prevRoute.cleanup()
     }
 
-    if (pushState && this._pageFromPath() !== page) {
-      history.pushState({ page }, '', '/' + (page === 'home' ? '' : page))
+    if (pushState && this._pageFromPath() !== fullKey) {
+      history.pushState({ page: fullKey }, '', '/' + (routeKey === 'home' ? '' : routeKey) + (query ? '?' + query : ''))
     }
 
-    const route = this.routes[page]
+    const route = this.routes[routeKey]
     if (route) {
       this._wrap.classList.add('page-transitioning')
 
@@ -158,9 +190,9 @@ export class Router {
     }
 
     window.scrollTo(0, 0)
-    document.title = PAGE_TITLES[page] || PAGE_TITLES['home']
+    document.title = PAGE_TITLES[routeKey] || PAGE_TITLES['home']
 
-    const meta = PAGE_METAS[page] || PAGE_METAS['home']
+    const meta = PAGE_METAS[routeKey] || PAGE_METAS['home']
     let descEl = document.querySelector('meta[name="description"]')
     if (descEl) descEl.setAttribute('content', meta.description)
     let canonicalEl = document.querySelector('link[rel="canonical"]')
@@ -179,7 +211,8 @@ export class Router {
 
   start(initialPage) {
     const pathPage = this._pageFromPath()
-    const page = (pathPage !== 'home' && this.routes[pathPage]) ? pathPage : initialPage
+    const routeKey = pathPage.split('?')[0]
+    const page = (routeKey !== 'home' && this.routes[routeKey]) ? pathPage : initialPage
     this._doNavigate(page, false)
   }
 }

@@ -13,14 +13,19 @@ export function buildTabBar(levels, active, onSwitch) {
   }).join('')
 }
 
-export async function loadFiles(el, level) {
+export async function loadFiles(el, level, onViewOffers) {
   if (!el) return
   try {
     const r = await api('GET', '/files/?level=' + level)
     if (!Array.isArray(r)) { el.innerHTML = '<p class="empty">لا توجد ملفات</p>'; return }
     el.innerHTML = r.length
-      ? `<div class="table-wrap"><table><tr><th>#</th><th>الحالة</th><th>التاريخ</th></tr>${r.map(f => `<tr><td>${f.id}</td><td><span class="badge badge-${esc(f.status)}">${esc(f.status)}</span></td><td>${new Date(f.created_at).toLocaleDateString('ar')}</td></tr>`).join('')}</table></div>`
+      ? `<div class="table-wrap"><table><tr><th>#</th><th>الحالة</th><th>التاريخ</th>${onViewOffers ? '<th>العروض</th>' : ''}</tr>${r.map(f => `<tr><td>${f.id}</td><td><span class="badge badge-${esc(f.status)}">${esc(f.status)}</span></td><td>${new Date(f.created_at).toLocaleDateString('ar')}</td>${onViewOffers ? `<td><button class="btn btn-sm btn-ghost file-offers-btn" data-id="${f.id}">شوف العروض</button></td>` : ''}</tr>`).join('')}</table></div>`
       : '<p class="empty">لا توجد ملفات</p>'
+    if (onViewOffers) {
+      el.querySelectorAll('.file-offers-btn').forEach(btn => {
+        btn.addEventListener('click', () => onViewOffers(parseInt(btn.dataset.id)))
+      })
+    }
   } catch { el.innerHTML = '<p class="empty">خطأ في التحميل</p>' }
 }
 
@@ -57,21 +62,25 @@ export async function loadProgress(el) {
   } catch { el.innerHTML = '<p class="empty">خطأ في التحميل</p>' }
 }
 
-export async function loadOffers(el, onReject, onPay) {
+export async function loadOffers(el, onReject, onPay, onReview) {
   if (!el) return
   try {
     const r = await api('GET', '/offers/')
     if (!Array.isArray(r) || !r.length) { el.innerHTML = '<p class="empty">لا توجد عروض</p>'; return }
-    el.innerHTML = `<div class="table-wrap"><table><tr><th>#</th><th>السعر</th><th>الحالة</th>${onReject || onPay ? '<th>إجراء</th>' : ''}</tr>${r.map(o => {
+    el.innerHTML = `<div class="table-wrap"><table><tr><th>#</th><th>السعر</th><th>الحالة</th>${onReject || onPay || onReview ? '<th>إجراء</th>' : ''}</tr>${r.map(o => {
       const needsPay = onPay && o.status === 'accepted' && o.session_status === 'awaiting_payment'
       const canReject = onReject && o.status === 'pending'
+      const canReview = onReview && o.session_status === 'done'
       let trial = ''
       if (o.session_is_trial) trial = ' <span class="badge badge-matched" style="font-size:.7rem">مجانية</span>'
+      const tname = ((o.tutor?.first_name || '') + ' ' + (o.tutor?.last_name || '')).trim()
       const action = canReject
         ? `<button class="btn btn-sm btn-ghost offer-reject-btn" data-id="${o.id}">رفض</button>`
         : needsPay
-          ? `<button class="btn btn-sm btn-primary offer-pay-btn" data-sid="${o.session_id}" data-amount="${o.tutor_price}" data-currency="${o.file?.currency || ''}">ادفع الآن (PayPal)</button>`
-          : onReject || onPay ? '—' : ''
+          ? `<button class="btn btn-sm btn-primary offer-pay-btn" data-sid="${o.session_id}" data-amount="${o.tutor_price}" data-currency="${o.file?.currency || ''}">ادفع الآن</button>`
+          : canReview
+            ? `<button class="btn btn-sm btn-ghost offer-review-btn" data-sid="${o.session_id}" data-tutor="${esc(tname)}">قيّم المدرس</button>`
+            : onReject || onPay || onReview ? '—' : ''
       return `
       <tr>
         <td>${o.id}</td>
@@ -90,27 +99,10 @@ export async function loadOffers(el, onReject, onPay) {
         btn.addEventListener('click', () => onPay(parseInt(btn.dataset.sid), btn.dataset.amount, btn.dataset.currency))
       })
     }
+    if (onReview) {
+      el.querySelectorAll('.offer-review-btn').forEach(btn => {
+        btn.addEventListener('click', () => onReview(parseInt(btn.dataset.sid), btn.dataset.tutor))
+      })
+    }
   } catch { el.innerHTML = '<p class="empty">خطأ في التحميل</p>' }
-}
-
-export async function loadTutorProfile(id, modalContentEl, closeModal) {
-  try {
-    const t = await api('GET', '/tutors/' + id + '/')
-    modalContentEl.innerHTML = `
-      <div style="text-align:center;margin-bottom:16px">
-        <img src="${esc(t.profile_picture_url || '')}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:8px" onerror="this.style.display='none'" alt="${esc(t.first_name || '')}">
-        <h3>${esc(t.first_name || '')} ${esc(t.last_name || '')}</h3>
-        <span class="badge badge-matched">${esc(LEVEL_MAP[t.teaching_level] || t.teaching_level || '')}</span>
-      </div>
-      ${t.bio ? '<p style="color:var(--text-gray);font-size:.9rem;text-align:center;margin-bottom:16px">' + esc(t.bio) + '</p>' : ''}
-      <div style="display:grid;gap:8px">
-        <div><strong>التخصص:</strong> ${esc(t.specialization || '—')}</div>
-        <div><strong>سنوات الخبرة:</strong> ${esc(String(t.years_experience || '—'))}</div>
-        <div><strong>المؤهل:</strong> ${esc(t.education || '—')}</div>
-        <div><strong>الشهادات:</strong> ${esc(t.certificates || '—')}</div>
-        ${t.languages?.length ? '<div><strong>اللغات:</strong> ' + t.languages.map(l => esc(LANG_MAP[l] || l)).join('، ') + '</div>' : ''}
-      </div>
-      <button class="btn btn-primary close-modal-btn" style="width:100%;margin-top:16px">إغلاق</button>`
-    modalContentEl.querySelector('.close-modal-btn')?.addEventListener('click', closeModal)
-  } catch { }
 }

@@ -75,6 +75,56 @@ class OfferAPITests(APITestCase):
         }, format="json")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_create_offer_wrong_level_fails(self):
+        other_file = File.objects.create(
+            student=self.student, education_level="high_school",
+            specialization="Physics", base_price=30, currency="SAR",
+            session_type="solo", status="pending"
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.tutor_token}")
+        response = self.client.post(reverse("offer-create"), {
+            "file_id": other_file.id,
+            "tutor_price": 25,
+            "payment_type": "per_session"
+        }, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_offer_price_too_low_fails(self):
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.tutor_token}")
+        response = self.client.post(reverse("offer-create"), {
+            "file_id": self.file.id,
+            "tutor_price": 1,
+            "payment_type": "per_session"
+        }, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_offer_price_too_high_fails(self):
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.tutor_token}")
+        response = self.client.post(reverse("offer-create"), {
+            "file_id": self.file.id,
+            "tutor_price": 99999,
+            "payment_type": "per_session"
+        }, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_offer_bad_payment_type_fails(self):
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.tutor_token}")
+        response = self.client.post(reverse("offer-create"), {
+            "file_id": self.file.id,
+            "tutor_price": 25,
+            "payment_type": "weekly"
+        }, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_offer_non_numeric_price_fails(self):
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.tutor_token}")
+        response = self.client.post(reverse("offer-create"), {
+            "file_id": self.file.id,
+            "tutor_price": "abc",
+            "payment_type": "per_session"
+        }, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def _make_pending_offer(self, price=25):
         return Request.objects.create(
             file=self.file, tutor=self.tutor,
@@ -138,6 +188,15 @@ class OfferAPITests(APITestCase):
         session = Session.objects.get(request=offer)
         self.assertEqual(float(session.platform_fee), round(45 * 0.15, 2))
 
+    def test_tutor_accept_price_above_max_fails(self):
+        offer = self._make_pending_offer(price=30)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.tutor_token}")
+        response = self.client.put(reverse("offer-respond", args=[offer.id]), {
+            "action": "accept",
+            "tutor_price": 99999
+        }, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_tutor_rejects_offer(self):
         offer = self._make_pending_offer()
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.tutor_token}")
@@ -169,6 +228,84 @@ class OfferAPITests(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.tutor_token}")
         response = self.client.put(reverse("offer-reject", args=[offer.id]))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_student_accept_first_session_is_trial(self):
+        offer = self._make_pending_offer()
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.student_token}")
+        response = self.client.put(reverse("offer-accept", args=[offer.id]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        offer.refresh_from_db()
+        self.assertEqual(offer.status, "accepted")
+        self.file.refresh_from_db()
+        self.assertEqual(self.file.status, "matched")
+        self.assertEqual(Session.objects.count(), 1)
+        session = Session.objects.first()
+        self.assertTrue(session.is_trial)
+        self.assertEqual(session.status, Session.Status.SCHEDULED)
+        self.assertEqual(float(session.tutor_amount), 0)
+
+    def test_student_accept_second_session_requires_payment(self):
+        prior_offer = self._make_pending_offer()
+        Session.objects.create(
+            request=prior_offer, platform_fee=0, tutor_amount=0,
+            is_trial=True, status="done"
+        )
+        file2 = File.objects.create(
+            student=self.student, education_level="university",
+            specialization="Physics", base_price=40, currency="SAR",
+            session_type="solo", status="pending"
+        )
+        offer = Request.objects.create(
+            file=file2, tutor=self.tutor, tutor_price=40,
+            payment_type="per_session", is_ai_proposed=True
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.student_token}")
+        response = self.client.put(reverse("offer-accept", args=[offer.id]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        session = Session.objects.get(request=offer)
+        self.assertFalse(session.is_trial)
+        self.assertEqual(session.status, Session.Status.AWAITING_PAYMENT)
+        self.assertEqual(float(session.platform_fee), round(40 * 0.15, 2))
+        self.assertEqual(float(session.tutor_amount), round(40 * 0.85, 2))
+
+    def test_student_accept_rejects_other_pending_offers(self):
+        tutor2 = User.objects.create_user(
+            username="tutor2", email="t2@test.com", password="pass12345",
+            role="tutor", teaching_level="university", is_approved=True,
+        )
+        other = Request.objects.create(
+            file=self.file, tutor=tutor2, tutor_price=28, payment_type="per_session"
+        )
+        offer = self._make_pending_offer()
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.student_token}")
+        response = self.client.put(reverse("offer-accept", args=[offer.id]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        other.refresh_from_db()
+        self.assertEqual(other.status, "rejected")
+
+    def test_tutor_cannot_accept_student_offer(self):
+        offer = self._make_pending_offer()
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.tutor_token}")
+        response = self.client.put(reverse("offer-accept", args=[offer.id]))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_student_cannot_accept_another_student_file(self):
+        other_student = User.objects.create_user(
+            username="student2", email="s2@test.com",
+            password="pass12345", role="student"
+        )
+        offer = self._make_pending_offer()
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {Token.objects.create(user=other_student).key}")
+        response = self.client.put(reverse("offer-accept", args=[offer.id]))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_accept_already_accepted_offer_fails(self):
+        offer = self._make_pending_offer()
+        offer.status = "accepted"
+        offer.save()
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.student_token}")
+        response = self.client.put(reverse("offer-accept", args=[offer.id]))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_complete_session(self):
         offer = self._make_pending_offer()
@@ -298,3 +435,26 @@ class ReviewAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["total_reviews"], 1)
         self.assertEqual(float(response.data["average_rating"]), 5.0)
+
+    def test_list_tutor_reviews_public(self):
+        Review.objects.create(
+            session=self.session, student=self.student,
+            tutor=self.tutor, rating=5, comment="Great!"
+        )
+        response = self.client.get(reverse("tutor-reviews", args=[self.tutor.id]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["total_reviews"], 1)
+
+    def test_user_serializer_average_rating(self):
+        Review.objects.create(
+            session=self.session, student=self.student,
+            tutor=self.tutor, rating=5, comment="Great!"
+        )
+        from users.serializers import UserSerializer
+        data = UserSerializer(self.tutor).data
+        self.assertEqual(data["average_rating"], 5.0)
+
+    def test_user_serializer_average_rating_none_when_no_reviews(self):
+        from users.serializers import UserSerializer
+        data = UserSerializer(self.tutor).data
+        self.assertIsNone(data["average_rating"])

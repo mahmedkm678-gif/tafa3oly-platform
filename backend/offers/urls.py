@@ -5,6 +5,7 @@ urlpatterns = [
     path("", views.list_offers, name="offer-list"),
     path("create/", views.create_offer, name="offer-create"),
     path("<int:pk>/respond/", views.respond_offer, name="offer-respond"),
+    path("<int:pk>/accept/", views.accept_offer, name="offer-accept"),
     path("<int:pk>/reject/", views.reject_offer, name="offer-reject"),
     path("sessions/<int:pk>/complete/", views.complete_session, name="session-complete"),
     path("progress/", views.list_progress, name="progress-list"),

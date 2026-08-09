@@ -26,6 +26,9 @@ export function buildFooter(navigate) {
             <h4 class="footer-nav-title">روابط سريعة</h4>
             <ul class="footer-nav-list">
               <li><a class="footer-nav-link" data-page="home">الرئيسية</a></li>
+              <li><a class="footer-nav-link" data-page="how-it-works?role=student">ازاي بيشتغل للطلاب</a></li>
+              <li><a class="footer-nav-link" data-page="how-it-works?role=tutor">ازاي بيشتغل للمدرسين</a></li>
+              <li><a class="footer-nav-link" data-page="upload-request">ارفع ملفك</a></li>
               <li><a class="footer-nav-link" data-page="register">إنشاء حساب</a></li>
               <li><a class="footer-nav-link" data-page="login">تسجيل دخول</a></li>
             </ul>

@@ -215,9 +215,11 @@ PRICING = {
 
 MAX_GROUP_SIZE = 10
 PLATFORM_FEE = 0.15
+MIN_TUTOR_PRICE = 5
+MAX_TUTOR_PRICE = 10000
 
 CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:5173,http://127.0.0.1:8000', cast=Csv())
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:5173,http://localhost:3000,http://127.0.0.1:8000', cast=Csv())
 CORS_ALLOW_CREDENTIALS = True
 
 PAYPAL_CLIENT_ID = config('PAYPAL_CLIENT_ID', default='')
@@ -228,5 +230,9 @@ PAYPAL_WEBHOOK_ID = config('PAYPAL_WEBHOOK_ID', default='')
 LOGGING = {
     'version': 1,
     'handlers': {'console': {'class': 'logging.StreamHandler'}},
-    'loggers': {'payments': {'handlers': ['console'], 'level': 'INFO'}},
+    'loggers': {
+        'payments': {'handlers': ['console'], 'level': 'INFO'},
+        'files': {'handlers': ['console'], 'level': 'INFO'},
+        'offers': {'handlers': ['console'], 'level': 'INFO'},
+    },
 }

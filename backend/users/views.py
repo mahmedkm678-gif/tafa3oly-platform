@@ -167,7 +167,7 @@ def upload_picture(request):
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def tutor_detail(request, pk):
     from .models import User
     try:
@@ -175,6 +175,22 @@ def tutor_detail(request, pk):
     except User.DoesNotExist:
         return Response({"error": "Tutor not found"}, status=status.HTTP_404_NOT_FOUND)
     return Response(TutorProfileSerializer(tutor).data)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def tutors_list(request):
+    from .models import User
+    cutoff = timezone.now() - timedelta(minutes=2)
+    User.objects.filter(role="tutor", is_available=True, last_seen__lt=cutoff).update(is_available=False)
+    qs = User.objects.filter(
+        role="tutor", is_available=True, is_approved=True, is_banned=False,
+        last_seen__gte=cutoff,
+    ).order_by("-last_seen")
+    level = request.query_params.get("level")
+    if level:
+        qs = qs.filter(teaching_level=level)
+    return Response(TutorProfileSerializer(qs, many=True).data)
 
 
 @api_view(["GET"])

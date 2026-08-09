@@ -2,7 +2,7 @@ from django.conf import settings
 from django.db import models, transaction
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from files.models import File
 from .models import Request, Session, MemorizationProgress, Review
@@ -40,9 +40,26 @@ def create_offer(request):
     payment_type = request.data.get("payment_type", "per_session")
 
     try:
+        tutor_price = float(tutor_price)
+    except (TypeError, ValueError):
+        return Response({"error": "tutor_price must be a number"}, status=status.HTTP_400_BAD_REQUEST)
+
+    if tutor_price < settings.MIN_TUTOR_PRICE or tutor_price > settings.MAX_TUTOR_PRICE:
+        return Response(
+            {"error": f"يجب أن يكون سعر العرض بين {settings.MIN_TUTOR_PRICE} و {settings.MAX_TUTOR_PRICE}"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if payment_type not in ("per_session", "monthly"):
+        return Response({"error": "payment_type must be 'per_session' or 'monthly'"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
         file_obj = File.objects.get(id=file_id, status="pending")
     except File.DoesNotExist:
         return Response({"error": "File not found or already matched"}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.user.teaching_level and file_obj.education_level != request.user.teaching_level:
+        return Response({"error": "هذا الملف ليس ضمن مستواك التعليمي"}, status=status.HTTP_400_BAD_REQUEST)
 
     if Request.objects.filter(file=file_obj, tutor=request.user).exists():
         return Response({"error": "You already submitted an offer for this file"}, status=status.HTTP_400_BAD_REQUEST)
@@ -82,6 +99,8 @@ def respond_offer(request, pk):
             return Response({"error": "tutor_price must be a number"}, status=status.HTTP_400_BAD_REQUEST)
         if tutor_price <= 0:
             return Response({"error": "tutor_price must be greater than zero"}, status=status.HTTP_400_BAD_REQUEST)
+        if tutor_price > settings.MAX_TUTOR_PRICE:
+            return Response({"error": f"tutor_price cannot exceed {settings.MAX_TUTOR_PRICE}"}, status=status.HTTP_400_BAD_REQUEST)
     else:
         tutor_price = float(offer.tutor_price)
 
@@ -98,6 +117,65 @@ def respond_offer(request, pk):
         student = offer.file.student
         had_previous = Session.objects.filter(
             request__file__student=student, request__tutor=request.user
+        ).exists()
+
+        if not had_previous:
+            session = Session.objects.create(
+                request=offer,
+                platform_fee=0,
+                tutor_amount=0,
+                is_trial=True,
+                status=Session.Status.SCHEDULED,
+            )
+        else:
+            base = float(offer.tutor_price)
+            platform_fee = round(base * settings.PLATFORM_FEE, 2)
+            tutor_amount = round(base * (1 - settings.PLATFORM_FEE), 2)
+            session = Session.objects.create(
+                request=offer,
+                platform_fee=platform_fee,
+                tutor_amount=tutor_amount,
+                is_trial=False,
+                status=Session.Status.AWAITING_PAYMENT,
+            )
+
+    return Response(
+        {
+            "offer": RequestSerializer(offer).data,
+            "session": {
+                "id": session.id,
+                "platform_fee": session.platform_fee,
+                "tutor_amount": session.tutor_amount,
+                "status": session.status,
+                "is_trial": session.is_trial,
+            },
+        }
+    )
+
+
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+def accept_offer(request, pk):
+    """Student accepts a tutor's offer; file becomes matched and a session is created."""
+    try:
+        offer = Request.objects.select_related("file__student", "tutor").get(id=pk, status="pending")
+    except Request.DoesNotExist:
+        return Response({"error": "Offer not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.user != offer.file.student:
+        return Response({"error": "Only the file owner can accept offers"}, status=status.HTTP_403_FORBIDDEN)
+
+    with transaction.atomic():
+        offer.status = "accepted"
+        offer.save()
+
+        offer.file.status = "matched"
+        offer.file.save()
+
+        Request.objects.filter(file=offer.file, status="pending").exclude(id=offer.id).update(status="rejected")
+
+        had_previous = Session.objects.filter(
+            request__file__student=offer.file.student, request__tutor=offer.tutor
         ).exists()
 
         if not had_previous:
@@ -264,7 +342,7 @@ def create_review(request):
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def list_tutor_reviews(request, tutor_id):
     reviews = Review.objects.filter(tutor_id=tutor_id).select_related("student").order_by("-created_at")
     avg = reviews.aggregate(avg_rating=models.Avg("rating"))

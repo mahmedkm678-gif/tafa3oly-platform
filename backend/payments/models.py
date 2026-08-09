@@ -31,6 +31,7 @@ class Payout(models.Model):
 class Payment(models.Model):
     class PaymentStatus(models.TextChoices):
         PENDING = 'pending', 'Pending'
+        PENDING_REVIEW = 'pending_review', 'قيد المراجعة'
         COMPLETED = 'completed', 'Completed'
         FAILED = 'failed', 'Failed'
         REFUNDED = 'refunded', 'Refunded'
@@ -42,11 +43,13 @@ class Payment(models.Model):
     session = models.OneToOneField(Session, on_delete=models.CASCADE, related_name='payment')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_method = models.CharField(max_length=50, default='paypal')
-    payment_status = models.CharField(max_length=10, choices=PaymentStatus.choices, default=PaymentStatus.PENDING)
+    payment_status = models.CharField(max_length=20, choices=PaymentStatus.choices, default=PaymentStatus.PENDING)
     payment_type = models.CharField(max_length=15, choices=PaymentType.choices, default=PaymentType.PER_SESSION)
     month_year = models.CharField(max_length=7, blank=True, default='')
     paypal_order_id = models.CharField(max_length=255, blank=True, default='')
     paypal_capture_id = models.CharField(max_length=255, blank=True, default='')
+    receipt_image_url = models.URLField(max_length=500, blank=True, default='')
+    reference_number = models.CharField(max_length=100, blank=True, default='')
     webhook_verified = models.BooleanField(default=False)
     payout = models.ForeignKey(Payout, on_delete=models.SET_NULL, null=True, blank=True, related_name='payments')
     payout_batch_id = models.CharField(max_length=255, blank=True, default='')

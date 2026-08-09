@@ -6,6 +6,8 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from rest_framework.authtoken.models import Token
+from django.utils import timezone
+from datetime import timedelta
 from .models import User, ContactRequest
 
 
@@ -213,4 +215,49 @@ class BanAndComplaintTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.tutor.refresh_from_db()
         self.assertTrue(self.tutor.is_approved)
+
+
+class PublicTutorTests(APITestCase):
+    def setUp(self):
+        self.available = User.objects.create_user(
+            username="tutor_avail", email="ta@test.com",
+            password="pass12345", role="tutor",
+            teaching_level="university", is_approved=True,
+            first_name="أحمد", last_name="علي",
+            is_available=True, last_seen=timezone.now(),
+        )
+        self.offline = User.objects.create_user(
+            username="tutor_offline", email="to@test.com",
+            password="pass12345", role="tutor",
+            teaching_level="university", is_approved=True,
+            is_available=False, last_seen=timezone.now() - timedelta(minutes=30),
+        )
+        self.unapproved = User.objects.create_user(
+            username="tutor_pending", email="tp@test.com",
+            password="pass12345", role="tutor",
+            teaching_level="university", is_approved=False,
+            is_available=True, last_seen=timezone.now(),
+        )
+
+    def test_public_tutor_detail(self):
+        response = self.client.get(reverse("tutor-detail", args=[self.available.id]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["first_name"], "أحمد")
+
+    def test_public_tutor_detail_not_found(self):
+        response = self.client.get(reverse("tutor-detail", args=[99999]))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_public_tutors_list_only_available_approved(self):
+        response = self.client.get(reverse("tutors-list"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = [t["id"] for t in response.data]
+        self.assertIn(self.available.id, ids)
+        self.assertNotIn(self.offline.id, ids)
+        self.assertNotIn(self.unapproved.id, ids)
+
+    def test_public_tutors_list_level_filter(self):
+        response = self.client.get(reverse("tutors-list"), {"level": "university"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
 

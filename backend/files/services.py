@@ -1,9 +1,12 @@
 import json
+import logging
 import uuid
 import PyPDF2
 from django.conf import settings
 from google import genai
 from supabase import create_client
+
+logger = logging.getLogger(__name__)
 
 supabase = None
 if settings.SUPABASE_URL and settings.SUPABASE_KEY:
@@ -52,10 +55,22 @@ def extract_text_from_pdf(file_obj):
             text += page.extract_text() or ""
         return text
     except Exception:
-        return "محتوى ملف تجريبي"
+        logger.warning("Failed to extract text from PDF %r", getattr(file_obj, "name", "?"))
+        return ""
+
+
+FALLBACK_ANALYSIS = {
+    "specialization": "تحليل مستندات (احتياطي)",
+    "difficulty": "medium",
+    "estimated_hours": "8",
+    "subject_type": "other"
+}
 
 
 def analyze_with_gemini(pdf_text):
+    if not pdf_text or not pdf_text.strip():
+        logger.warning("Gemini skipped: empty PDF text")
+        return dict(FALLBACK_ANALYSIS)
     if not settings.GEMINI_API_KEY:
         return {
             "specialization": "هندسة برمجيات / علوم الحاسب",
@@ -73,14 +88,13 @@ def analyze_with_gemini(pdf_text):
         raw = response.text.strip()
         if raw.startswith("```"):
             raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-        return json.loads(raw)
-    except Exception as e:
-        return {
-            "specialization": "تحليل مستندات (احتياطي)",
-            "difficulty": "medium",
-            "estimated_hours": "8",
-            "subject_type": "other"
-        }
+        parsed = json.loads(raw)
+        if not isinstance(parsed, dict):
+            raise ValueError("Gemini returned non-object JSON")
+        return parsed
+    except Exception:
+        logger.exception("Gemini analysis failed, using fallback")
+        return dict(FALLBACK_ANALYSIS)
 
 
 def calculate_price(country, session_type, estimated_hours, students=1, level="university"):

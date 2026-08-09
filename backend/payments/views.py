@@ -17,6 +17,7 @@ from .services import (
     execute_paypal_payment,
     verify_webhook_signature,
 )
+from files.services import upload_to_supabase
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +26,15 @@ logger = logging.getLogger(__name__)
 @permission_classes([IsAuthenticated])
 def list_payments(request):
     qs = Payment.objects.select_related("session__request__file", "session__request__tutor")
-    if request.user.role == "student":
+    if request.user.is_staff or request.user.is_superuser:
+        pass
+    elif request.user.role == "student":
         qs = qs.filter(session__request__file__student=request.user)
     else:
         qs = qs.filter(session__request__tutor=request.user)
+    payment_status = request.query_params.get("status")
+    if payment_status:
+        qs = qs.filter(payment_status=payment_status)
     qs = qs.order_by("-created_at")
     return Response(PaymentSerializer(qs, many=True).data)
 
@@ -37,11 +43,18 @@ def list_payments(request):
 @permission_classes([IsAuthenticated])
 def create_payment(request):
     session_id = request.data.get("session_id")
+    payment_method = request.data.get("payment_method", "paypal")
+
+    if payment_method not in ("paypal", "instapay", "vodafone_cash"):
+        return Response(
+            {"error": "payment_method must be 'paypal', 'instapay' or 'vodafone_cash'"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     try:
-        session = Session.objects.select_related("request__file__student", "request").get(
-            id=session_id, request__file__student=request.user
-        )
+        session = Session.objects.select_related(
+            "request__file__student", "request__tutor"
+        ).get(id=session_id, request__file__student=request.user)
     except Session.DoesNotExist:
         return Response({"error": "Session not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -61,6 +74,31 @@ def create_payment(request):
 
     total = float(session.request.tutor_price)
     currency = session.request.file.currency
+
+    if payment_method != "paypal":
+        tutor = session.request.tutor
+        recipient = tutor.instapay_phone if payment_method == "instapay" else tutor.vodafone_cash
+        if not recipient:
+            return Response(
+                {"error": "المدرس غير مسجل في هذه المحفظة — اختر طريقة دفع أخرى"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        payment = Payment.objects.create(
+            session=session,
+            amount=total,
+            payment_method=payment_method,
+            payment_type=payment_type,
+            month_year=month_year,
+            payment_status=Payment.PaymentStatus.PENDING_REVIEW,
+        )
+        return Response({
+            "payment": PaymentSerializer(payment).data,
+            "manual": True,
+            "recipient": recipient,
+            "recipient_method": payment_method,
+            "currency": currency,
+        }, status=status.HTTP_201_CREATED)
+
     return_url = request.data.get("return_url") or f"{request.scheme}://{request.get_host()}/student-dashboard"
     cancel_url = request.data.get("cancel_url") or f"{request.scheme}://{request.get_host()}/student-dashboard"
 
@@ -82,6 +120,60 @@ def create_payment(request):
         "payment": PaymentSerializer(payment).data,
         "approval_url": approval_url,
     }, status=status.HTTP_201_CREATED)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def submit_receipt(request):
+    payment_id = request.data.get("payment_id")
+    reference_number = request.data.get("reference_number", "")
+    receipt = request.FILES.get("receipt")
+
+    if not payment_id:
+        return Response({"error": "payment_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        payment = Payment.objects.select_related("session__request__file__student").get(id=payment_id)
+    except Payment.DoesNotExist:
+        return Response({"error": "Payment not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    if payment.payment_method not in ("instapay", "vodafone_cash"):
+        return Response({"error": "هذا الدفع ليس عبر تحويل يدوي"}, status=status.HTTP_400_BAD_REQUEST)
+    if payment.payment_status != Payment.PaymentStatus.PENDING_REVIEW:
+        return Response({"error": "هذا الدفع ليس قيد المراجعة"}, status=status.HTTP_400_BAD_REQUEST)
+    if payment.session.request.file.student != request.user:
+        return Response({"error": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
+
+    if receipt:
+        payment.receipt_image_url = upload_to_supabase(receipt, request.user.id)
+    if reference_number:
+        payment.reference_number = reference_number
+    payment.save()
+
+    return Response(PaymentSerializer(payment).data)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def verify_manual_payment(request, pk):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return Response({"error": "Admins only"}, status=status.HTTP_403_FORBIDDEN)
+
+    try:
+        payment = Payment.objects.select_related("session").get(id=pk)
+    except Payment.DoesNotExist:
+        return Response({"error": "Payment not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    if payment.payment_status != Payment.PaymentStatus.PENDING_REVIEW:
+        return Response({"error": "هذا الدفع ليس قيد المراجعة"}, status=status.HTTP_400_BAD_REQUEST)
+
+    payment.payment_status = Payment.PaymentStatus.COMPLETED
+    payment.save()
+
+    payment.session.status = Session.Status.SCHEDULED
+    payment.session.save()
+
+    return Response(PaymentSerializer(payment).data)
 
 
 @api_view(["POST"])

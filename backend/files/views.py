@@ -14,6 +14,21 @@ from .services import (
 logger = logging.getLogger(__name__)
 
 
+def _safe_analysis(analysis):
+    try:
+        estimated_hours = float(analysis.get("estimated_hours", 8))
+    except (TypeError, ValueError):
+        estimated_hours = 8
+    if not (0 < estimated_hours <= 1000):
+        estimated_hours = 8
+    return {
+        "specialization": str(analysis.get("specialization") or "تحليل مستندات (احتياطي)"),
+        "difficulty": str(analysis.get("difficulty") or "medium"),
+        "estimated_hours": estimated_hours,
+        "subject_type": str(analysis.get("subject_type") or "other"),
+    }
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def upload_file(request):
@@ -30,17 +45,18 @@ def upload_file(request):
     file_url = upload_to_supabase(file_obj, student.id)
     pdf_text = extract_text_from_pdf(file_obj)
     analysis = analyze_with_gemini(pdf_text)
-    estimated_hours = float(analysis["estimated_hours"])
+    safe = _safe_analysis(analysis)
+    estimated_hours = safe["estimated_hours"]
     pricing = calculate_price(country, session_type, estimated_hours, students_count, education_level)
     max_students = students_count if session_type == "group" else 1
 
     file_record = File.objects.create(
         student=student,
         file_url=file_url,
-        specialization=analysis["specialization"],
-        difficulty=analysis["difficulty"],
+        specialization=safe["specialization"],
+        difficulty=safe["difficulty"],
         estimated_hours=estimated_hours,
-        subject_type=analysis["subject_type"],
+        subject_type=safe["subject_type"],
         education_level=education_level,
         base_price=pricing["base_price"],
         currency=pricing["currency"],

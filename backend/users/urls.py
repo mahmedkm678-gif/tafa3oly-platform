@@ -11,6 +11,7 @@ urlpatterns = [
     path("upload-picture/", views.upload_picture, name="upload-picture"),
     path("available-tutors/", views.available_tutors, name="available-tutors"),
     path("ping/", views.ping, name="ping"),
+    path("tutors/", views.tutors_list, name="tutors-list"),
     path("tutors/<int:pk>/", views.tutor_detail, name="tutor-detail"),
     path("contact/", views.submit_contact_request, name="contact-submit"),
     path("complaints/", views.submit_complaint, name="complaint-submit"),

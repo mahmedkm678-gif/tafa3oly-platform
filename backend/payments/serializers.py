@@ -8,7 +8,8 @@ class PaymentSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'session', 'amount', 'payment_method', 'payment_status',
             'payment_type', 'month_year',
-            'paypal_order_id', 'paypal_capture_id', 'webhook_verified',
+            'paypal_order_id', 'paypal_capture_id',
+            'receipt_image_url', 'reference_number', 'webhook_verified',
             'payout', 'payout_batch_id', 'tutor_paid', 'created_at',
         ]
         read_only_fields = fields

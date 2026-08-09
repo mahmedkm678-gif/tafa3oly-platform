@@ -3,6 +3,8 @@ from django.urls import reverse
 from rest_framework.test import APITestCase
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+from django.core.files.uploadedfile import SimpleUploadedFile
+from unittest.mock import patch
 from users.models import User
 from files.models import File
 from offers.models import Request, Session
@@ -132,3 +134,135 @@ class PaymentAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         total = response.data["total_by_currency"]
         self.assertEqual(float(total["SAR"]), 21.25)
+
+
+class ManualPaymentTests(APITestCase):
+    def setUp(self):
+        self.student = User.objects.create_user(
+            username="student1", email="s1@test.com",
+            password="pass12345", role="student"
+        )
+        self.tutor = User.objects.create_user(
+            username="tutor1", email="t1@test.com",
+            password="pass12345", role="tutor",
+            teaching_level="university",
+            instapay_phone="01000000000"
+        )
+        self.admin = User.objects.create_superuser(
+            username="admin", email="admin@test.com", password="pass12345"
+        )
+        self.file = File.objects.create(
+            student=self.student, education_level="university",
+            specialization="Math", base_price=30, currency="SAR",
+            session_type="solo", status="matched"
+        )
+        self.offer = Request.objects.create(
+            file=self.file, tutor=self.tutor,
+            tutor_price=25, payment_type="per_session", status="accepted"
+        )
+        self.session = Session.objects.create(
+            request=self.offer, platform_fee=3.75,
+            tutor_amount=21.25, status="awaiting_payment"
+        )
+        self.student_token = Token.objects.create(user=self.student).key
+        self.admin_token = Token.objects.create(user=self.admin).key
+
+    def _make_manual_payment(self):
+        return Payment.objects.create(
+            session=self.session, amount=25, payment_method="instapay",
+            payment_status="pending_review"
+        )
+
+    def test_create_manual_payment_instapay(self):
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.student_token}")
+        response = self.client.post(reverse("payment-create"), {
+            "session_id": self.session.id,
+            "payment_method": "instapay",
+        }, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(response.data["manual"])
+        self.assertEqual(response.data["recipient"], "01000000000")
+        self.assertEqual(response.data["currency"], "SAR")
+        payment = Payment.objects.get(session=self.session)
+        self.assertEqual(payment.payment_method, "instapay")
+        self.assertEqual(payment.payment_status, "pending_review")
+
+    def test_create_manual_payment_missing_wallet_fails(self):
+        tutor2 = User.objects.create_user(
+            username="tutor2", email="t2@test.com",
+            password="pass12345", role="tutor", teaching_level="university"
+        )
+        file2 = File.objects.create(
+            student=self.student, education_level="university",
+            specialization="Physics", base_price=30, currency="SAR",
+            session_type="solo", status="matched"
+        )
+        offer2 = Request.objects.create(
+            file=file2, tutor=tutor2, tutor_price=25,
+            payment_type="per_session", status="accepted"
+        )
+        session2 = Session.objects.create(
+            request=offer2, platform_fee=3.75,
+            tutor_amount=21.25, status="awaiting_payment"
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.student_token}")
+        response = self.client.post(reverse("payment-create"), {
+            "session_id": session2.id,
+            "payment_method": "instapay",
+        }, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_payment_bad_method_fails(self):
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.student_token}")
+        response = self.client.post(reverse("payment-create"), {
+            "session_id": self.session.id,
+            "payment_method": "cash",
+        }, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_submit_receipt(self):
+        payment = self._make_manual_payment()
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.student_token}")
+        with patch("payments.views.upload_to_supabase", return_value="http://example.com/r.png"):
+            response = self.client.post(reverse("payment-receipt"), {
+                "payment_id": payment.id,
+                "reference_number": "123456789",
+                "receipt": SimpleUploadedFile("r.png", b"image-data", content_type="image/png"),
+            }, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        payment.refresh_from_db()
+        self.assertEqual(payment.reference_number, "123456789")
+        self.assertEqual(payment.receipt_image_url, "http://example.com/r.png")
+
+    def test_submit_receipt_for_paypal_fails(self):
+        payment = Payment.objects.create(session=self.session, amount=25, payment_method="paypal")
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.student_token}")
+        response = self.client.post(reverse("payment-receipt"), {
+            "payment_id": payment.id,
+            "reference_number": "x",
+        }, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_verify_manual_payment_admin(self):
+        payment = self._make_manual_payment()
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.admin_token}")
+        response = self.client.post(reverse("payment-verify", args=[payment.id]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        payment.refresh_from_db()
+        self.assertEqual(payment.payment_status, "completed")
+        self.session.refresh_from_db()
+        self.assertEqual(self.session.status, "scheduled")
+
+    def test_verify_manual_payment_non_admin_fails(self):
+        payment = self._make_manual_payment()
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.student_token}")
+        response = self.client.post(reverse("payment-verify", args=[payment.id]))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_list_payments_status_filter_admin(self):
+        self._make_manual_payment()
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.admin_token}")
+        response = self.client.get(reverse("payment-list"), {"status": "pending_review"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["payment_status"], "pending_review")

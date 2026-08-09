@@ -11,6 +11,11 @@ import { renderEditProfile, initEditProfile } from './pages/EditProfile.js'
 import { renderPrivacy } from './pages/Privacy.js'
 import { renderTerms } from './pages/Terms.js'
 import { renderFAQ } from './pages/FAQ.js'
+import { renderUploadRequest } from './pages/UploadRequest.js'
+import { renderHowItWorks, initHowItWorks } from './pages/HowItWorks.js'
+import { renderOfferDetail, initOfferDetail } from './pages/OfferDetail.js'
+import { renderTutorProfile, initTutorProfile } from './pages/TutorProfile.js'
+import { renderPayment, initPayment } from './pages/Payment.js'
 import { renderNotFound } from './pages/NotFound.js'
 import { toast } from './components/Toast.js'
 
@@ -34,6 +39,11 @@ const routes = {
   'privacy': { render: renderPrivacy },
   'terms': { render: renderTerms },
   'faq': { render: renderFAQ },
+  'upload-request': { render: renderUploadRequest },
+  'how-it-works': { render: renderHowItWorks, init: initHowItWorks },
+  'offer-detail': { render: renderOfferDetail, init: initOfferDetail },
+  'tutor-profile': { render: renderTutorProfile, init: initTutorProfile },
+  'payment': { render: renderPayment, init: initPayment },
   '404': { render: renderNotFound },
 }
 

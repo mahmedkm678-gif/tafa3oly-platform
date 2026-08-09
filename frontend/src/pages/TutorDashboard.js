@@ -18,7 +18,7 @@ export function renderTutorDashboard() {
             <span style="color:var(--text-muted);font-size:.85rem" id="tdLevel"></span>
           </div>
           <div style="display:flex;align-items:center;gap:12px">
-            <span class="online-badge"><span class="dot"></span> متصل</span>
+            <button id="tdAvailBtn" class="btn btn-sm btn-success"><i class="fas fa-user-check"></i> متاح الآن</button>
             <button class="btn btn-sm btn-secondary page-btn" data-page="edit-profile"><i class="fas fa-user-edit"></i> تعديل البروفايل</button>
           </div>
         </div>
@@ -37,6 +37,8 @@ let tdCurrentSessionId = null
 let tdLevel = ''
 let tdInterval = null
 let tdPing = null
+let tdAvail = false
+let tdOfferFileId = null
 
 export function initTutorDashboard() {
   if (!isTutor()) return
@@ -59,11 +61,28 @@ export function initTutorDashboard() {
 
   tdBuild()
 
-  if (tdPing) clearInterval(tdPing)
-  tdPing = setInterval(() => { try { api('POST', '/ping/') } catch { } }, 30000)
+  const availBtn = $('tdAvailBtn')
+  if (availBtn) availBtn.addEventListener('click', () => tdSetAvail(!tdAvail))
+  tdSetAvail(!!u.is_available)
 
   if (tdInterval) clearInterval(tdInterval)
   tdInterval = setInterval(() => tdLoad(), 15000)
+}
+
+function tdSetAvail(on) {
+  tdAvail = on
+  const btn = $('tdAvailBtn')
+  if (btn) {
+    btn.className = 'btn btn-sm ' + (on ? 'btn-success' : 'btn-secondary')
+    btn.innerHTML = on
+      ? '<i class="fas fa-user-check"></i> متاح الآن'
+      : '<i class="fas fa-user-slash"></i> غير متاح'
+  }
+  if (tdPing) { clearInterval(tdPing); tdPing = null }
+  if (on) {
+    api('POST', '/ping/').catch(() => {})
+    tdPing = setInterval(() => { try { api('POST', '/ping/') } catch { } }, 60000)
+  }
 }
 
 function tdBuild() {
@@ -71,6 +90,9 @@ function tdBuild() {
     <h3>طلبات مقترحة عليك — ${LEVEL_MAP[tdLevel]}</h3>
     <p style="color:var(--text-muted);font-size:.82rem;margin-bottom:8px">اقترح عليك الذكاء الاصطناعي سعراً — أنت من يقرر: قبول أو تعديل السعر أو رفض.</p>
     <div class="tdProposals" style="padding:20px 0">${Spinner()}</div>
+    <h3 style="margin-top:20px">طلبات متاحة لك</h3>
+    <p style="color:var(--text-muted);font-size:.82rem;margin-bottom:8px">طلبات من طلاب في تخصصك — اعرض سعرك عليها وقدّم عرضاً بنفسك.</p>
+    <div class="tdAvailable" style="padding:20px 0">${Spinner()}</div>
     <h3 style="margin-top:20px">سجل عروضي</h3>
     <div class="tdOffers" style="padding:20px 0">${Spinner()}</div>
     <h3 style="margin-top:20px">جلساتي النشطة</h3>
@@ -82,7 +104,7 @@ function tdBuild() {
 }
 
 async function tdLoad() {
-  try { await Promise.all([tdLoadProposals(), tdLoadOffers(), tdLoadSessions(), tdLoadEarnings()]) } catch { }
+  try { await Promise.all([tdLoadProposals(), tdLoadAvailable(), tdLoadOffers(), tdLoadSessions(), tdLoadEarnings()]) } catch { }
 }
 
 async function tdLoadEarnings() {
@@ -195,6 +217,75 @@ async function submitModify() {
   } catch (e) {
     $('modifyError').textContent = e.data?.error || e.message
     $('modifyError').style.display = 'block'
+  }
+}
+
+async function tdLoadAvailable() {
+  const el = document.querySelector('#tdContent .tdAvailable')
+  if (!el) return
+  try {
+    const r = await api('GET', '/files/')
+    if (!Array.isArray(r) || !r.length) { el.innerHTML = '<p class="empty">لا توجد طلبات متاحة حالياً</p>'; return }
+    el.innerHTML = r.map(f => `
+      <div class="session-card" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div>
+            <strong>${esc(f.specialization || f.subject_type || 'طلب')}</strong>
+            <div style="color:var(--text-muted);font-size:.82rem;margin-top:4px">
+              الصعوبة: ${esc(f.difficulty || '—')}${f.estimated_hours ? ' · ' + f.estimated_hours + ' ساعات تقديرية' : ''} · السعر المقترح: <strong>${f.base_price} ${esc(f.currency || '')}</strong>
+            </div>
+            <div style="color:var(--text-muted);font-size:.78rem;margin-top:2px">نُشر ${new Date(f.created_at).toLocaleDateString('ar')}</div>
+          </div>
+          <button class="btn btn-sm btn-primary td-offer-btn" data-id="${f.id}"><i class="fas fa-hand-holding-usd"></i> قدّم عرض</button>
+        </div>
+      </div>
+    `).join('')
+    el.querySelectorAll('.td-offer-btn').forEach(b => b.addEventListener('click', () => tdOpenOffer(parseInt(b.dataset.id))))
+  } catch { el.innerHTML = '<p class="empty">خطأ في التحميل</p>' }
+}
+
+function tdOpenOffer(fileId) {
+  tdOfferFileId = fileId
+  const content = `
+    <h3>تقديم عرض — طلب #${fileId}</h3>
+    <p style="color:var(--text-muted);margin-bottom:12px;font-size:.9rem">حدد سعرك المقترح (أول جلسة مع الطالب مجانية):</p>
+    <div class="form-group"><label>سعرك المقترح</label><input type="number" id="offerPrice" step="0.01" min="1" placeholder="مثال: 25"></div>
+    <div class="form-group"><label>نوع الدفع</label><select id="offerPayType">
+      <option value="per_session">بالحصة</option>
+      <option value="monthly">شهري</option>
+    </select></div>
+    <div class="modal-btns">
+      <button class="btn btn-primary" id="submitOfferBtn">إرسال العرض</button>
+      <button class="btn btn-ghost" id="closeOfferBtn">إلغاء</button>
+    </div>
+    <p id="offerError" style="color:#EF4444;font-size:.85rem;margin-top:8px;display:none"></p>
+  `
+  $('offerModal').querySelector('.modal').innerHTML = content
+  openModal('offerModal')
+
+  $('submitOfferBtn').addEventListener('click', submitOffer)
+  $('closeOfferBtn').addEventListener('click', () => closeModal('offerModal'))
+}
+
+async function submitOffer() {
+  const p = $('offerPrice').value
+  if (!p || p <= 0) {
+    $('offerError').textContent = 'أدخل سعراً صحيحاً'
+    $('offerError').style.display = 'block'
+    return
+  }
+  try {
+    await api('POST', '/offers/create/', {
+      file_id: tdOfferFileId,
+      tutor_price: p,
+      payment_type: $('offerPayType').value,
+    })
+    toast('تم إرسال عرضك بنجاح ✓', 'success')
+    closeModal('offerModal')
+    tdLoad()
+  } catch (e) {
+    $('offerError').textContent = e.data?.error || e.message
+    $('offerError').style.display = 'block'
   }
 }
 
